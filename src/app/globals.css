@@ -1,13 +1,17 @@
 @import "tailwindcss";
 
+/* CreditSea brand tokens (from creditsea.com) */
 :root {
-  --background: #f4f7f6;
-  --foreground: #0f1f1c;
+  --background: #f5f7ff;
+  --foreground: #44465b;
   --card: #ffffff;
-  --accent: #0f766e;
-  --accent-hover: #0d9488;
-  --muted: #64748b;
-  --border: #d6e0dd;
+  --accent: #0075ff;
+  --accent-hover: #0066dd;
+  --accent-soft: #e8f1ff;
+  --accent-deep: #004699;
+  --muted: #4b5563;
+  --border: #d1d1d1;
+  --ink: #060606;
 }
 
 @theme inline {
@@ -16,8 +20,11 @@
   --color-card: var(--card);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-deep: var(--accent-deep);
   --color-muted: var(--muted);
   --color-border: var(--border);
+  --color-ink: var(--ink);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

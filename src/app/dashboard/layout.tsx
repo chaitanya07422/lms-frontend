@@ -35,7 +35,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <Link
               href="/dashboard"
               className={`rounded-md px-3 py-2 text-sm ${
-                pathname === '/dashboard' ? 'bg-teal-50 text-accent' : 'text-slate-700 hover:bg-slate-50'
+                pathname === '/dashboard'
+                  ? 'bg-accent-soft text-accent'
+                  : 'text-foreground hover:bg-accent-soft/60'
               }`}
             >
               Overview
@@ -48,7 +50,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   key={mod}
                   href={href}
                   className={`rounded-md px-3 py-2 text-sm ${
-                    active ? 'bg-teal-50 text-accent' : 'text-slate-700 hover:bg-slate-50'
+                    active
+                      ? 'bg-accent-soft text-accent'
+                      : 'text-foreground hover:bg-accent-soft/60'
                   }`}
                 >
                   {LABELS[mod] ?? mod}

@@ -47,7 +47,7 @@ export default function RegisterPage() {
 
         <form className="mt-8 space-y-4" onSubmit={onSubmit}>
           <label className="block text-sm">
-            <span className="mb-1 block text-slate-700">Full name</span>
+            <span className="mb-1 block text-foreground">Full name</span>
             <input
               required
               minLength={2}
@@ -57,7 +57,7 @@ export default function RegisterPage() {
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-slate-700">Email</span>
+            <span className="mb-1 block text-foreground">Email</span>
             <input
               type="email"
               required
@@ -67,7 +67,7 @@ export default function RegisterPage() {
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-slate-700">Password</span>
+            <span className="mb-1 block text-foreground">Password</span>
             <input
               type="password"
               required

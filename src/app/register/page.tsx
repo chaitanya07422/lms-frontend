@@ -2,14 +2,15 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 
 import { useAuth } from '@/context/auth-context';
 import { APP_NAME } from '@/lib/config';
+import { homePathForRole } from '@/lib/roles';
 import { ApiError } from '@/types/api';
 
 export default function RegisterPage() {
-  const { register } = useAuth();
+  const { register, user, isLoading } = useAuth();
   const router = useRouter();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -17,13 +18,19 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (!isLoading && user) {
+      router.replace(homePathForRole(user.role));
+    }
+  }, [isLoading, router, user]);
+
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
     setSubmitting(true);
     try {
-      await register(email.trim(), password, fullName.trim());
-      router.replace('/borrower');
+      const nextUser = await register(email.trim(), password, fullName.trim());
+      router.replace(homePathForRole(nextUser.role));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Registration failed');
     } finally {

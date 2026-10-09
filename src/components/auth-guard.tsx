@@ -4,13 +4,29 @@ import { useRouter } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 
 import { useAuth } from '@/context/auth-context';
-import { homePathForRole, isBorrowerRole, isOpsRole } from '@/lib/roles';
-import type { UserRole } from '@/types/user';
+import { homePathForRole, isBorrowerRole, isOpsRole, modulesForRole } from '@/lib/roles';
+import type { OpsRole, UserRole } from '@/types/user';
+
+const OPS_MODULES = new Set<string>(['sales', 'sanction', 'disbursement', 'collection']);
 
 type AuthGuardProps = {
   children: ReactNode;
-  allow: 'borrower' | 'ops' | UserRole[];
+  /** `borrower` portal, any `ops` role, or a single ops module name */
+  allow: 'borrower' | 'ops' | OpsRole;
 };
+
+function isAllowed(userRole: UserRole, allow: AuthGuardProps['allow']): boolean {
+  if (allow === 'borrower') {
+    return isBorrowerRole(userRole);
+  }
+  if (allow === 'ops') {
+    return isOpsRole(userRole);
+  }
+  if (OPS_MODULES.has(allow)) {
+    return modulesForRole(userRole).includes(allow);
+  }
+  return false;
+}
 
 export function AuthGuard({ children, allow }: AuthGuardProps) {
   const { user, isLoading } = useAuth();
@@ -26,17 +42,7 @@ export function AuthGuard({ children, allow }: AuthGuardProps) {
       return;
     }
 
-    if (allow === 'borrower' && !isBorrowerRole(user.role)) {
-      router.replace(homePathForRole(user.role));
-      return;
-    }
-
-    if (allow === 'ops' && !isOpsRole(user.role)) {
-      router.replace(homePathForRole(user.role));
-      return;
-    }
-
-    if (Array.isArray(allow) && !allow.includes(user.role) && user.role !== 'admin') {
+    if (!isAllowed(user.role, allow)) {
       router.replace(homePathForRole(user.role));
     }
   }, [allow, isLoading, router, user]);
@@ -49,15 +55,7 @@ export function AuthGuard({ children, allow }: AuthGuardProps) {
     );
   }
 
-  if (allow === 'borrower' && !isBorrowerRole(user.role)) {
-    return null;
-  }
-
-  if (allow === 'ops' && !isOpsRole(user.role)) {
-    return null;
-  }
-
-  if (Array.isArray(allow) && !allow.includes(user.role) && user.role !== 'admin') {
+  if (!isAllowed(user.role, allow)) {
     return null;
   }
 

@@ -5,18 +5,20 @@ import { useParams } from 'next/navigation';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 
 import { StatusBadge } from '@/components/ops/status-badge';
+import { Field, PrimaryButton, TextInput } from '@/components/ui/field';
+import { Panel } from '@/components/ui/panel';
+import { loanRef } from '@/lib/loan-ref';
 import { formatPaise, rupeesToPaise } from '@/lib/money';
 import {
   getCollectionLoan,
   recordPayment,
   type PaymentDto,
+  type QueueLoan,
 } from '@/lib/ops-api';
 import { ApiError } from '@/types/api';
-import type { LoanDto } from '@/types/loan';
-
 export default function CollectionDetailPage() {
   const params = useParams<{ loanId: string }>();
-  const [loan, setLoan] = useState<LoanDto | null>(null);
+  const [loan, setLoan] = useState<QueueLoan | null>(null);
   const [payments, setPayments] = useState<PaymentDto[]>([]);
   const [utr, setUtr] = useState('');
   const [amountRupees, setAmountRupees] = useState('');
@@ -43,13 +45,16 @@ export default function CollectionDetailPage() {
     setError(null);
     setSuccess(null);
     try {
-      const amountPaise = rupeesToPaise(Number(amountRupees));
       const result = await recordPayment(params.loanId, {
         utr: utr.trim(),
-        amountPaise,
+        amountPaise: rupeesToPaise(Number(amountRupees)),
         paidAt,
       });
-      setLoan(result.loan);
+      setLoan((prev) => ({
+        ...result.loan,
+        borrowerName: prev?.borrowerName ?? 'Borrower',
+        borrowerEmail: prev?.borrowerEmail ?? '',
+      }));
       setPayments((prev) => [result.payment, ...prev]);
       setUtr('');
       setAmountRupees('');
@@ -67,15 +72,12 @@ export default function CollectionDetailPage() {
 
   if (error && !loan) {
     return (
-      <section>
-        <p className="text-sm text-red-600">{error}</p>
-        <Link
-          href="/dashboard/collection"
-          className="mt-4 inline-block text-sm text-accent underline"
-        >
+      <Panel>
+        <p className="text-sm text-danger">{error}</p>
+        <Link href="/dashboard/collection" className="mt-4 inline-block text-sm text-accent underline">
           Back
         </Link>
-      </section>
+      </Panel>
     );
   }
 
@@ -84,6 +86,10 @@ export default function CollectionDetailPage() {
   }
 
   const canPay = loan.status === 'DISBURSED' && loan.outstandingPaise > 0;
+  const pct =
+    loan.totalRepaymentPaise > 0
+      ? Math.min(100, (loan.totalPaidPaise / loan.totalRepaymentPaise) * 100)
+      : 0;
 
   return (
     <section className="space-y-4">
@@ -91,95 +97,130 @@ export default function CollectionDetailPage() {
         ← Collection queue
       </Link>
 
-      <div className="rounded-2xl border border-border bg-card p-6">
+      <Panel>
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <h2 className="text-xl font-semibold text-ink">{formatPaise(loan.principalPaise)}</h2>
+          <div>
+            <h2 className="text-2xl font-semibold text-ink">{loan.borrowerName}</h2>
+            <p className="mt-1 text-sm text-muted">
+              {loanRef(loan.id)} · {formatPaise(loan.principalPaise)} · {loan.tenureDays} days
+            </p>
+          </div>
           <StatusBadge status={loan.status} />
         </div>
-        <dl className="mt-6 grid gap-3 text-sm sm:grid-cols-3">
-          <div>
-            <dt className="text-muted">Total repayment</dt>
-            <dd className="font-medium">{formatPaise(loan.totalRepaymentPaise)}</dd>
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+          <Stat label="Total repayment" value={formatPaise(loan.totalRepaymentPaise, true)} />
+          <Stat
+            label="Paid so far"
+            value={formatPaise(loan.totalPaidPaise, true)}
+            valueClass="text-teal"
+          />
+          <Stat
+            label="Outstanding"
+            value={formatPaise(loan.outstandingPaise, true)}
+            valueClass="text-warn"
+          />
+        </div>
+
+        <div className="mt-6">
+          <div className="mb-2 flex justify-between text-sm">
+            <span className="text-muted">Repayment progress</span>
+            <span className="font-medium text-ink">{pct.toFixed(1)}% repaid</span>
           </div>
-          <div>
-            <dt className="text-muted">Paid</dt>
-            <dd className="font-medium">{formatPaise(loan.totalPaidPaise)}</dd>
+          <div className="h-2 overflow-hidden rounded-full bg-border">
+            <div className="h-full rounded-full bg-desk" style={{ width: `${pct}%` }} />
           </div>
-          <div>
-            <dt className="text-muted">Outstanding</dt>
-            <dd className="font-medium">{formatPaise(loan.outstandingPaise)}</dd>
-          </div>
-        </dl>
-      </div>
+        </div>
+      </Panel>
 
       {canPay ? (
-        <form onSubmit={onSubmit} className="rounded-2xl border border-border bg-card p-6 space-y-3">
-          {/* UTR must be unique system-wide; full repay auto-closes on the API. */}
+        <Panel>
           <h3 className="font-semibold text-ink">Record payment</h3>
-          <label className="block text-sm">
-            <span className="mb-1 block">UTR (unique)</span>
-            <input
-              required
-              value={utr}
-              onChange={(e) => setUtr(e.target.value)}
-              className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-accent"
-            />
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block">Amount (₹)</span>
-            <input
-              type="number"
-              required
-              min={1}
-              step={1}
-              value={amountRupees}
-              onChange={(e) => setAmountRupees(e.target.value)}
-              className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-accent"
-            />
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block">Payment date</span>
-            <input
-              type="date"
-              required
-              value={paidAt}
-              onChange={(e) => setPaidAt(e.target.value)}
-              className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-accent"
-            />
-          </label>
-          <button
-            type="submit"
-            disabled={busy}
-            className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-60"
-          >
-            {busy ? 'Saving…' : 'Save payment'}
-          </button>
-        </form>
+          <form onSubmit={onSubmit} className="mt-4 grid gap-4 sm:grid-cols-3">
+            <Field label="UTR number" hint="Must be unique across all payments" className="sm:col-span-3">
+              <TextInput required value={utr} onChange={(e) => setUtr(e.target.value)} />
+            </Field>
+            <Field label="Amount" hint="Cannot exceed the outstanding balance">
+              <TextInput
+                type="number"
+                required
+                min={1}
+                step={1}
+                value={amountRupees}
+                onChange={(e) => setAmountRupees(e.target.value)}
+              />
+            </Field>
+            <Field label="Payment date">
+              <TextInput
+                type="date"
+                required
+                value={paidAt}
+                onChange={(e) => setPaidAt(e.target.value)}
+              />
+            </Field>
+            <div className="flex items-end">
+              <PrimaryButton type="submit" disabled={busy} className="w-full">
+                {busy ? 'Saving…' : 'Record payment'}
+              </PrimaryButton>
+            </div>
+          </form>
+          <p className="mt-3 text-xs text-muted">
+            The loan closes automatically when the balance reaches zero.
+          </p>
+        </Panel>
       ) : null}
 
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
-      {success ? <p className="text-sm text-emerald-700">{success}</p> : null}
+      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {success ? <p className="text-sm text-success">{success}</p> : null}
 
-      <div className="rounded-2xl border border-border bg-card p-6">
-        <h3 className="font-semibold text-ink">Payment history</h3>
-        {payments.length === 0 ? (
-          <p className="mt-2 text-sm text-muted">No payments yet.</p>
-        ) : (
-          <ul className="mt-3 space-y-2 text-sm">
-            {payments.map((p) => (
-              <li
-                key={p.id}
-                className="flex flex-wrap justify-between gap-2 rounded-lg bg-accent-soft/60 px-3 py-2"
-              >
-                <span>
-                  {formatPaise(p.amountPaise)} · UTR {p.utr}
-                </span>
-                <span className="text-muted">{p.paidAt.slice(0, 10)}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <Panel className="overflow-x-auto p-0">
+        <div className="border-b border-border px-4 py-3">
+          <h3 className="font-semibold text-ink">Payment history</h3>
+        </div>
+        <table className="w-full min-w-[480px] text-left text-sm">
+          <thead className="border-b border-border bg-background text-xs uppercase tracking-wide text-muted">
+            <tr>
+              <th className="px-4 py-3 font-semibold">UTR</th>
+              <th className="px-4 py-3 font-semibold">Amount</th>
+              <th className="px-4 py-3 font-semibold">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {payments.length === 0 ? (
+              <tr>
+                <td colSpan={3} className="px-4 py-6 text-muted">
+                  No payments yet.
+                </td>
+              </tr>
+            ) : (
+              payments.map((p) => (
+                <tr key={p.id} className="border-b border-border last:border-0">
+                  <td className="px-4 py-3 font-mono text-xs">{p.utr}</td>
+                  <td className="px-4 py-3">{formatPaise(p.amountPaise)}</td>
+                  <td className="px-4 py-3 text-muted">{p.paidAt.slice(0, 10)}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </Panel>
     </section>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  valueClass = 'text-ink',
+}: {
+  label: string;
+  value: string;
+  valueClass?: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-background px-4 py-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</p>
+      <p className={`mt-1 text-lg font-semibold ${valueClass}`}>{value}</p>
+    </div>
   );
 }

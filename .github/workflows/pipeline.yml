@@ -32,7 +32,7 @@ jobs:
         env:
           # Baked into the client bundle — browser calls Oracle API.
           NEXT_PUBLIC_API_BASE_URL: https://creditsea.duckdns.org/api/v1
-          NEXT_PUBLIC_APP_NAME: CreditSea
+          NEXT_PUBLIC_APP_NAME: LoanDesk
 
       - name: Pack standalone release
         run: |

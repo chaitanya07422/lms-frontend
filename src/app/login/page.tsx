@@ -1,21 +1,31 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useEffect, useState } from 'react';
 
+import { GuestShell } from '@/components/auth/guest-shell';
+import { Field, TextInput, PrimaryButton } from '@/components/ui/field';
+import { Panel } from '@/components/ui/panel';
 import { useAuth } from '@/context/auth-context';
 import { APP_NAME } from '@/lib/config';
 import { homePathForRole } from '@/lib/roles';
 import { ApiError } from '@/types/api';
 
 export default function LoginPage() {
-  const { login, user, isLoading } = useAuth();
+  const { login, register, user, isLoading } = useAuth();
   const router = useRouter();
+  const [mode, setMode] = useState<'login' | 'register'>('login');
+
+  const [regName, setRegName] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [regError, setRegError] = useState<string | null>(null);
+  const [regBusy, setRegBusy] = useState(false);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [loginBusy, setLoginBusy] = useState(false);
 
   useEffect(() => {
     if (!isLoading && user) {
@@ -23,69 +33,142 @@ export default function LoginPage() {
     }
   }, [isLoading, router, user]);
 
-  async function onSubmit(event: FormEvent) {
+  async function onRegister(event: FormEvent) {
     event.preventDefault();
-    setError(null);
-    setSubmitting(true);
+    setRegError(null);
+    setRegBusy(true);
+    try {
+      const nextUser = await register(regEmail.trim(), regPassword, regName.trim());
+      router.replace(homePathForRole(nextUser.role));
+    } catch (err) {
+      setRegError(err instanceof ApiError ? err.message : 'Registration failed');
+    } finally {
+      setRegBusy(false);
+    }
+  }
+
+  async function onLogin(event: FormEvent) {
+    event.preventDefault();
+    setLoginError(null);
+    setLoginBusy(true);
     try {
       const nextUser = await login(email.trim(), password);
       router.replace(homePathForRole(nextUser.role));
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Login failed');
+      setLoginError(err instanceof ApiError ? err.message : 'Login failed');
     } finally {
-      setSubmitting(false);
+      setLoginBusy(false);
     }
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">{APP_NAME}</p>
-        <h1 className="mt-2 text-2xl font-semibold text-foreground">Sign in</h1>
-        <p className="mt-1 text-sm text-muted">Borrower portal and operations dashboard.</p>
-
-        <form className="mt-8 space-y-4" onSubmit={onSubmit}>
-          <label className="block text-sm">
-            <span className="mb-1 block text-foreground">Email</span>
-            <input
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-accent"
-            />
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block text-foreground">Password</span>
-            <input
-              type="password"
-              required
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-accent"
-            />
-          </label>
-
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-60"
-          >
-            {submitting ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-muted">
-          New borrower?{' '}
-          <Link href="/register" className="font-medium text-accent hover:underline">
-            Create an account
-          </Link>
-        </p>
+    <GuestShell>
+      <div className="mx-auto w-full max-w-md">
+        {mode === 'login' ? (
+          <Panel className="shadow-sm">
+            <h1 className="text-2xl font-bold text-ink">Log in</h1>
+            <p className="mt-1 text-sm text-muted">Welcome back. Continue where you left off.</p>
+            <form className="mt-7 space-y-4" onSubmit={onLogin}>
+              <Field label="Email">
+                <TextInput
+                  type="email"
+                  required
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                />
+              </Field>
+              <Field label="Password">
+                <TextInput
+                  type="password"
+                  required
+                  placeholder="Your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                />
+              </Field>
+              {loginError ? <p className="text-sm text-danger">{loginError}</p> : null}
+              <PrimaryButton type="submit" disabled={loginBusy} className="w-full">
+                {loginBusy ? 'Logging in…' : 'Log in'}
+              </PrimaryButton>
+            </form>
+            <div className="mt-6 rounded-xl bg-background px-4 py-3 text-sm text-muted">
+              Staff log in here too. Executives land on their own desk after logging in.
+            </div>
+            <p className="mt-5 text-center text-sm text-muted">
+              New borrower?{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('register');
+                  setLoginError(null);
+                }}
+                className="font-semibold text-teal hover:underline"
+              >
+                Create new account
+              </button>
+            </p>
+          </Panel>
+        ) : (
+          <Panel className="shadow-sm">
+            <h1 className="text-2xl font-bold text-ink">Create your account</h1>
+            <p className="mt-1 text-sm text-muted">
+              New to {APP_NAME}? Sign up to start your loan application.
+            </p>
+            <form className="mt-7 space-y-4" onSubmit={onRegister}>
+              <Field label="Full name">
+                <TextInput
+                  required
+                  placeholder="e.g. Rahul Sharma"
+                  value={regName}
+                  onChange={(e) => setRegName(e.target.value)}
+                  autoComplete="name"
+                />
+              </Field>
+              <Field label="Email">
+                <TextInput
+                  type="email"
+                  required
+                  placeholder="you@example.com"
+                  value={regEmail}
+                  onChange={(e) => setRegEmail(e.target.value)}
+                  autoComplete="email"
+                />
+              </Field>
+              <Field label="Password" hint="At least 8 characters">
+                <TextInput
+                  type="password"
+                  required
+                  minLength={8}
+                  placeholder="Create a password"
+                  value={regPassword}
+                  onChange={(e) => setRegPassword(e.target.value)}
+                  autoComplete="new-password"
+                />
+              </Field>
+              {regError ? <p className="text-sm text-danger">{regError}</p> : null}
+              <PrimaryButton type="submit" disabled={regBusy} className="w-full">
+                {regBusy ? 'Creating…' : 'Create account'}
+              </PrimaryButton>
+            </form>
+            <p className="mt-5 text-center text-sm text-muted">
+              Already have an account?{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('login');
+                  setRegError(null);
+                }}
+                className="font-semibold text-teal hover:underline"
+              >
+                Log in
+              </button>
+            </p>
+          </Panel>
+        )}
       </div>
-    </main>
+    </GuestShell>
   );
 }

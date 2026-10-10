@@ -4,7 +4,12 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { LoanLifecycle } from '@/components/borrower/lifecycle';
+import { StatusBadge } from '@/components/ops/status-badge';
+import { Panel } from '@/components/ui/panel';
+import { useAuth } from '@/context/auth-context';
 import { getMyLoan } from '@/lib/borrower-api';
+import { loanRef } from '@/lib/loan-ref';
 import { formatPaise } from '@/lib/money';
 import { ApiError } from '@/types/api';
 import type { LoanDto } from '@/types/loan';
@@ -18,6 +23,7 @@ type PaymentRow = {
 
 export default function LoanDetailPage() {
   const params = useParams<{ loanId: string }>();
+  const { user } = useAuth();
   const [loan, setLoan] = useState<LoanDto | null>(null);
   const [payments, setPayments] = useState<PaymentRow[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -35,12 +41,12 @@ export default function LoanDetailPage() {
 
   if (error) {
     return (
-      <section className="rounded-2xl border border-border bg-card p-6">
-        <p className="text-sm text-red-600">{error}</p>
+      <Panel>
+        <p className="text-sm text-danger">{error}</p>
         <Link href="/borrower/loans" className="mt-4 inline-block text-sm text-accent underline">
           Back to loans
         </Link>
-      </section>
+      </Panel>
     );
   }
 
@@ -49,53 +55,67 @@ export default function LoanDetailPage() {
   }
 
   return (
-    <section className="space-y-4">
-      <Link href="/borrower/loans" className="text-sm font-medium text-accent hover:underline">
-        ← My loans
-      </Link>
-
-      <div className="rounded-2xl border border-border bg-card p-6">
-        <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="space-y-4">
+      <Panel>
+        <p className="text-sm font-medium text-success">
+          Your loan application has been submitted.
+        </p>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-semibold text-ink">{formatPaise(loan.principalPaise)}</h2>
-            <p className="text-sm text-muted">{loan.tenureDays} days · {loan.interestRateAnnual}% p.a.</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-muted">
+              Reference number
+            </p>
+            <p className="text-lg font-semibold text-ink">{loanRef(loan.id)}</p>
           </div>
-          <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent-deep">
-            {loan.status}
-          </span>
+          <StatusBadge status={loan.status} />
         </div>
 
-        <dl className="mt-6 grid gap-3 text-sm sm:grid-cols-2">
-          <div>
+        <dl className="mt-6 space-y-2 text-sm">
+          <div className="flex justify-between gap-3">
+            <dt className="text-muted">Applicant</dt>
+            <dd className="font-medium">
+              {user?.fullName}
+              {user?.pan ? ` · ${user.pan}` : ''}
+            </dd>
+          </div>
+          <div className="flex justify-between gap-3">
+            <dt className="text-muted">Principal</dt>
+            <dd className="font-medium">{formatPaise(loan.principalPaise)}</dd>
+          </div>
+          <div className="flex justify-between gap-3">
+            <dt className="text-muted">Interest rate</dt>
+            <dd className="font-medium">{loan.interestRateAnnual}% p.a., simple interest</dd>
+          </div>
+          <div className="flex justify-between gap-3">
+            <dt className="text-muted">Tenure</dt>
+            <dd className="font-medium">{loan.tenureDays} days</dd>
+          </div>
+          <div className="flex justify-between gap-3">
             <dt className="text-muted">Interest</dt>
-            <dd className="font-medium">{formatPaise(loan.interestPaise)}</dd>
+            <dd className="font-medium">{formatPaise(loan.interestPaise, true)}</dd>
           </div>
-          <div>
-            <dt className="text-muted">Total repayment</dt>
-            <dd className="font-medium">{formatPaise(loan.totalRepaymentPaise)}</dd>
-          </div>
-          <div>
-            <dt className="text-muted">Paid</dt>
-            <dd className="font-medium">{formatPaise(loan.totalPaidPaise)}</dd>
-          </div>
-          <div>
-            <dt className="text-muted">Outstanding</dt>
-            <dd className="font-medium">{formatPaise(loan.outstandingPaise)}</dd>
+          <div className="flex justify-between gap-3 border-t border-border pt-2">
+            <dt className="font-semibold text-ink">Total repayment</dt>
+            <dd className="font-bold text-accent-deep">
+              {formatPaise(loan.totalRepaymentPaise, true)}
+            </dd>
           </div>
         </dl>
 
         {loan.rejectionReason ? (
-          <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">
+          <p className="mt-4 rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger">
             Rejected: {loan.rejectionReason}
           </p>
         ) : null}
-      </div>
 
-      <div className="rounded-2xl border border-border bg-card p-6">
-        <h3 className="font-semibold text-ink">Payments</h3>
-        {payments.length === 0 ? (
-          <p className="mt-2 text-sm text-muted">No payments recorded yet.</p>
-        ) : (
+        <div className="mt-8">
+          <LoanLifecycle status={loan.status} />
+        </div>
+      </Panel>
+
+      {payments.length > 0 ? (
+        <Panel>
+          <h3 className="font-semibold text-ink">Payments</h3>
           <ul className="mt-3 space-y-2 text-sm">
             {payments.map((p) => (
               <li
@@ -105,12 +125,12 @@ export default function LoanDetailPage() {
                 <span>
                   {formatPaise(p.amountPaise)} · UTR {p.utr}
                 </span>
-                <span className="text-muted">{new Date(p.paidAt).toLocaleString()}</span>
+                <span className="text-muted">{new Date(p.paidAt).toLocaleDateString()}</span>
               </li>
             ))}
           </ul>
-        )}
-      </div>
-    </section>
+        </Panel>
+      ) : null}
+    </div>
   );
 }

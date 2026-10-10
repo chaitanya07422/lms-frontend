@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { FormEvent, useEffect, useState } from 'react';
 
 import { BreResultPanel } from '@/components/borrower/bre-result';
+import { PrimaryButton } from '@/components/ui/field';
+import { Panel, PageTitle } from '@/components/ui/panel';
 import { useAuth } from '@/context/auth-context';
 import {
   applyLoan,
@@ -26,14 +28,13 @@ import type { BreResult, LoanQuote, SalarySlipDto } from '@/types/loan';
 export default function ApplyLoanPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [principalRupees, setPrincipalRupees] = useState(MIN_PRINCIPAL_RUPEES);
-  const [tenureDays, setTenureDays] = useState(90);
+  const [principalRupees, setPrincipalRupees] = useState(250_000);
+  const [tenureDays, setTenureDays] = useState(180);
   const [quote, setQuote] = useState<LoanQuote | null>(null);
   const [slip, setSlip] = useState<SalarySlipDto | null>(null);
   const [bre, setBre] = useState<BreResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [quoting, setQuoting] = useState(false);
 
   useEffect(() => {
     void getLatestSalarySlip()
@@ -41,29 +42,17 @@ export default function ApplyLoanPage() {
       .catch(() => setSlip(null));
   }, []);
 
-  // Debounce live quote so slider drags don't spam /loans/preview.
   useEffect(() => {
     let cancelled = false;
-    setQuoting(true);
     const timer = window.setTimeout(() => {
       void previewLoan(rupeesToPaise(principalRupees), tenureDays)
         .then((q) => {
-          if (!cancelled) {
-            setQuote(q);
-          }
+          if (!cancelled) setQuote(q);
         })
         .catch(() => {
-          if (!cancelled) {
-            setQuote(null);
-          }
-        })
-        .finally(() => {
-          if (!cancelled) {
-            setQuoting(false);
-          }
+          if (!cancelled) setQuote(null);
         });
-    }, 250);
-
+    }, 200);
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
@@ -74,16 +63,10 @@ export default function ApplyLoanPage() {
     event.preventDefault();
     setError(null);
     setBre(null);
-
-    if (!user?.profileComplete) {
-      setError('Complete your profile before applying.');
+    if (!user?.profileComplete || !slip) {
+      setError('Complete profile and salary slip before applying.');
       return;
     }
-    if (!slip) {
-      setError('Upload a salary slip before applying.');
-      return;
-    }
-
     setBusy(true);
     try {
       const loan = await applyLoan(rupeesToPaise(principalRupees), tenureDays, slip.id);
@@ -97,110 +80,129 @@ export default function ApplyLoanPage() {
   }
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-6">
-      <h2 className="text-xl font-semibold text-ink">Apply for a loan</h2>
-      <p className="mt-1 text-sm text-muted">
-        Live quote from the server at {INTEREST_RATE_ANNUAL}% p.a. simple interest.
-      </p>
+    <div>
+      <PageTitle
+        title="Choose your loan"
+        subtitle="Move the sliders and the summary updates as you go."
+      />
 
-      {!user?.profileComplete ? (
-        <p className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Profile incomplete.{' '}
-          <Link href="/borrower/profile" className="font-medium text-accent underline">
-            Finish profile
-          </Link>
+      {!user?.profileComplete || !slip ? (
+        <p className="mb-4 rounded-lg bg-warn-soft px-4 py-3 text-sm text-warn">
+          {!user?.profileComplete ? (
+            <>
+              Finish{' '}
+              <Link href="/borrower/profile" className="font-semibold underline">
+                personal details
+              </Link>{' '}
+              first.
+            </>
+          ) : (
+            <>
+              <Link href="/borrower/salary-slip" className="font-semibold underline">
+                Upload a salary slip
+              </Link>{' '}
+              before applying.
+            </>
+          )}
         </p>
       ) : null}
 
-      {!slip ? (
-        <p className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          No salary slip yet.{' '}
-          <Link href="/borrower/salary-slip" className="font-medium text-accent underline">
-            Upload one
-          </Link>
-        </p>
-      ) : (
-        <p className="mt-4 text-sm text-muted">
-          Using slip: <span className="font-medium text-foreground">{slip.originalName}</span>
-        </p>
-      )}
+      <form className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]" onSubmit={onSubmit}>
+        <Panel className="shadow-sm">
+          <label className="block">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-sm font-medium text-ink">Loan Amount</span>
+              <span className="text-2xl font-bold text-teal">
+                ₹{principalRupees.toLocaleString('en-IN')}
+              </span>
+            </div>
+            <input
+              type="range"
+              min={MIN_PRINCIPAL_RUPEES}
+              max={MAX_PRINCIPAL_RUPEES}
+              step={5000}
+              value={principalRupees}
+              onChange={(e) => setPrincipalRupees(Number(e.target.value))}
+              className="mt-4 w-full"
+            />
+            <div className="mt-1 flex justify-between text-xs text-muted">
+              <span>₹{MIN_PRINCIPAL_RUPEES.toLocaleString('en-IN')}</span>
+              <span>₹{MAX_PRINCIPAL_RUPEES.toLocaleString('en-IN')}</span>
+            </div>
+          </label>
 
-      <form className="mt-6 space-y-6" onSubmit={onSubmit}>
-        <label className="block text-sm">
-          <div className="mb-2 flex justify-between">
-            <span>Principal</span>
-            <span className="font-medium text-ink">
-              ₹{principalRupees.toLocaleString('en-IN')}
-            </span>
-          </div>
-          <input
-            type="range"
-            min={MIN_PRINCIPAL_RUPEES}
-            max={MAX_PRINCIPAL_RUPEES}
-            step={5000}
-            value={principalRupees}
-            onChange={(e) => setPrincipalRupees(Number(e.target.value))}
-            className="w-full accent-[var(--accent)]"
-          />
-          <div className="mt-1 flex justify-between text-xs text-muted">
-            <span>₹{MIN_PRINCIPAL_RUPEES.toLocaleString('en-IN')}</span>
-            <span>₹{MAX_PRINCIPAL_RUPEES.toLocaleString('en-IN')}</span>
-          </div>
-        </label>
+          <label className="mt-8 block">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-sm font-medium text-ink">Tenure</span>
+              <span className="text-2xl font-bold text-teal">{tenureDays} days</span>
+            </div>
+            <input
+              type="range"
+              min={MIN_TENURE_DAYS}
+              max={MAX_TENURE_DAYS}
+              step={1}
+              value={tenureDays}
+              onChange={(e) => setTenureDays(Number(e.target.value))}
+              className="mt-4 w-full"
+            />
+            <div className="mt-1 flex justify-between text-xs text-muted">
+              <span>{MIN_TENURE_DAYS} days</span>
+              <span>{MAX_TENURE_DAYS} days</span>
+            </div>
+          </label>
 
-        <label className="block text-sm">
-          <div className="mb-2 flex justify-between">
-            <span>Tenure</span>
-            <span className="font-medium text-ink">{tenureDays} days</span>
+          <div className="mt-8 rounded-lg bg-background px-4 py-3 text-sm text-muted">
+            Fixed {INTEREST_RATE_ANNUAL}% p.a., simple interest.
           </div>
-          <input
-            type="range"
-            min={MIN_TENURE_DAYS}
-            max={MAX_TENURE_DAYS}
-            step={1}
-            value={tenureDays}
-            onChange={(e) => setTenureDays(Number(e.target.value))}
-            className="w-full accent-[var(--accent)]"
-          />
-          <div className="mt-1 flex justify-between text-xs text-muted">
-            <span>{MIN_TENURE_DAYS} days</span>
-            <span>{MAX_TENURE_DAYS} days</span>
-          </div>
-        </label>
+        </Panel>
 
-        <div className="rounded-xl bg-accent-soft px-4 py-4 text-sm">
-          <p className="font-medium text-ink">Live quote {quoting ? '…' : ''}</p>
+        <Panel className="shadow-sm">
+          <h3 className="text-base font-bold text-ink">Loan summary</h3>
           {quote ? (
-            <dl className="mt-2 grid gap-1 sm:grid-cols-3">
-              <div>
-                <dt className="text-muted">Interest</dt>
-                <dd className="font-semibold">{formatPaise(quote.interestPaise)}</dd>
-              </div>
-              <div>
-                <dt className="text-muted">Total repayment</dt>
-                <dd className="font-semibold">{formatPaise(quote.totalRepaymentPaise)}</dd>
-              </div>
-              <div>
-                <dt className="text-muted">Rate</dt>
-                <dd className="font-semibold">{quote.interestRateAnnual}% p.a.</dd>
+            <dl className="mt-5 space-y-3 text-sm">
+              <Row label="Principal" value={formatPaise(rupeesToPaise(principalRupees))} />
+              <Row label="Interest rate" value={`${INTEREST_RATE_ANNUAL}% p.a.`} />
+              <Row label="Tenure" value={`${tenureDays} days`} />
+              <Row label="Interest" value={formatPaise(quote.interestPaise, true)} />
+              <div className="border-t border-border pt-4">
+                <p className="text-sm text-muted">Total repayment</p>
+                <p className="mt-1 text-2xl font-bold text-ink">
+                  {formatPaise(quote.totalRepaymentPaise, true)}
+                </p>
+                <p className="mt-2 text-xs text-muted">
+                  Interest = P × {INTEREST_RATE_ANNUAL} × days / (365 × 100)
+                </p>
               </div>
             </dl>
           ) : (
-            <p className="mt-2 text-muted">Adjust sliders to load a quote.</p>
+            <p className="mt-4 text-sm text-muted">Loading quote…</p>
           )}
-        </div>
 
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
-        {bre ? <BreResultPanel bre={bre} /> : null}
+          {error ? <p className="mt-4 text-sm text-danger">{error}</p> : null}
+          {bre ? (
+            <div className="mt-4">
+              <BreResultPanel bre={bre} />
+            </div>
+          ) : null}
 
-        <button
-          type="submit"
-          disabled={busy || !user?.profileComplete || !slip}
-          className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-60"
-        >
-          {busy ? 'Submitting…' : 'Submit application'}
-        </button>
+          <PrimaryButton
+            type="submit"
+            disabled={busy || !user?.profileComplete || !slip}
+            className="mt-6 w-full bg-teal hover:bg-teal-hover"
+          >
+            {busy ? 'Submitting…' : 'Apply for loan'}
+          </PrimaryButton>
+        </Panel>
       </form>
-    </section>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-3">
+      <dt className="text-muted">{label}</dt>
+      <dd className="font-semibold text-ink">{value}</dd>
+    </div>
   );
 }

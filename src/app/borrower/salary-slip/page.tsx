@@ -1,7 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import { FormEvent, useEffect, useState } from 'react';
 
+import { PrimaryButton } from '@/components/ui/field';
+import { Panel, PageTitle } from '@/components/ui/panel';
 import { getLatestSalarySlip, uploadSalarySlip } from '@/lib/borrower-api';
 import {
   MAX_SALARY_SLIP_BYTES,
@@ -14,8 +17,8 @@ export default function SalarySlipPage() {
   const [file, setFile] = useState<File | null>(null);
   const [latest, setLatest] = useState<SalarySlipDto | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
 
   useEffect(() => {
     void getLatestSalarySlip()
@@ -24,17 +27,19 @@ export default function SalarySlipPage() {
   }, []);
 
   function onFileChange(next: File | null) {
-    setSuccess(null);
     if (!next) {
       setFile(null);
       setError(null);
       return;
     }
-    // Client-side gate; API also enforces PDF/JPG/PNG ≤ 5 MB.
     const invalid = validateSalarySlipFile(next);
     if (invalid) {
       setFile(null);
-      setError(invalid);
+      setError(
+        invalid.toLowerCase().includes('type') || invalid.toLowerCase().includes('invalid')
+          ? 'Wrong file type. Please upload a PDF, JPG or PNG file.'
+          : 'File is too large. The maximum size is 5 MB.',
+      );
       return;
     }
     setFile(next);
@@ -47,19 +52,11 @@ export default function SalarySlipPage() {
       setError('Choose a file first');
       return;
     }
-    const invalid = validateSalarySlipFile(file);
-    if (invalid) {
-      setError(invalid);
-      setFile(null);
-      return;
-    }
-    setError(null);
-    setSuccess(null);
     setBusy(true);
+    setError(null);
     try {
       const slip = await uploadSalarySlip(file);
       setLatest(slip);
-      setSuccess(`Uploaded ${slip.originalName}`);
       setFile(null);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Upload failed');
@@ -69,52 +66,79 @@ export default function SalarySlipPage() {
   }
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-6">
-      <h2 className="text-xl font-semibold text-ink">Salary slip</h2>
-      <p className="mt-1 text-sm text-muted">
-        PDF, JPG, or PNG only — max 5 MB (assignment Step 3). Rejected files are not uploaded.
-      </p>
+    <Panel className="max-w-2xl shadow-sm">
+      <PageTitle
+        title="Upload your salary slip"
+        subtitle="Your slip is stored and linked to your application."
+      />
 
-      <form className="mt-6 space-y-4" onSubmit={onSubmit}>
-        <label className="block text-sm">
-          <span className="mb-1 block">File</span>
-          <input
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-            onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
-            className="block w-full cursor-pointer text-sm file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-accent file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-accent-hover"
-          />
-          <span className="mt-1 block text-xs text-muted">
-            {file
-              ? `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB / max ${(MAX_SALARY_SLIP_BYTES / (1024 * 1024)).toFixed(0)} MB)`
-              : 'Click “Choose File”, pick a PDF/JPG/PNG (≤ 5 MB), then press Upload.'}
-          </span>
-        </label>
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-60"
+      <form className="space-y-4" onSubmit={onSubmit}>
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOver(true);
+          }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragOver(false);
+            onFileChange(e.dataTransfer.files?.[0] ?? null);
+          }}
+          className={`rounded-xl border-2 border-dashed px-6 py-12 text-center ${
+            dragOver ? 'border-teal bg-teal-soft' : 'border-border bg-background'
+          }`}
         >
-          {busy ? 'Uploading…' : 'Upload'}
-        </button>
-      </form>
-
-      <div className="mt-6 space-y-2">
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
-        {success ? <p className="text-sm text-emerald-700">{success}</p> : null}
-        {latest ? (
-          <div className="rounded-xl bg-accent-soft px-4 py-3 text-sm">
-            <p className="font-medium text-ink">Latest upload</p>
-            <p className="text-muted">
-              {latest.originalName} · {(latest.sizeBytes / 1024).toFixed(1)} KB ·{' '}
-              {new Date(latest.createdAt).toLocaleString()}
+          <p className="font-semibold text-ink">Drag and drop your salary slip here</p>
+          <p className="mt-1 text-sm text-muted">
+            PDF, JPG or PNG. Maximum {(MAX_SALARY_SLIP_BYTES / (1024 * 1024)).toFixed(0)} MB
+          </p>
+          <label className="mt-5 inline-flex cursor-pointer rounded-lg bg-teal px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-hover">
+            Choose file
+            <input
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+              className="hidden"
+              onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
+            />
+          </label>
+          {file ? (
+            <p className="mt-3 text-sm text-foreground">
+              Selected: {file.name} ({(file.size / 1024).toFixed(1)} KB)
             </p>
-            <p className="mt-1 font-mono text-xs text-foreground">id: {latest.id}</p>
+          ) : null}
+        </div>
+
+        {latest ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-4 py-3 text-sm">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-muted">Uploaded file</p>
+              <p className="font-semibold text-ink">{latest.originalName}</p>
+              <p className="text-muted">{(latest.sizeBytes / (1024 * 1024)).toFixed(1)} MB</p>
+            </div>
+            <span className="rounded-full bg-teal-soft px-2.5 py-1 text-[11px] font-bold uppercase text-teal">
+              Uploaded
+            </span>
           </div>
-        ) : (
-          <p className="text-sm text-muted">No salary slip uploaded yet.</p>
-        )}
-      </div>
-    </section>
+        ) : null}
+
+        {error ? <p className="text-sm text-danger">{error}</p> : null}
+
+        <div className="flex flex-wrap gap-3">
+          {file ? (
+            <PrimaryButton type="submit" disabled={busy}>
+              {busy ? 'Uploading…' : 'Upload'}
+            </PrimaryButton>
+          ) : null}
+          {latest ? (
+            <Link
+              href="/borrower/apply"
+              className="rounded-lg bg-teal px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-hover"
+            >
+              Continue
+            </Link>
+          ) : null}
+        </div>
+      </form>
+    </Panel>
   );
 }

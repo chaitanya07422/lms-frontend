@@ -1,8 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+import { StatusBadge } from '@/components/ops/status-badge';
+import { PageTitle, Panel } from '@/components/ui/panel';
 import { listLeads, type LeadSummary } from '@/lib/ops-api';
 import { ApiError } from '@/types/api';
 
@@ -22,37 +23,63 @@ export default function SalesLeadsPage() {
 
   return (
     <section className="space-y-4">
-      <div>
-        <h2 className="text-2xl font-semibold text-ink">Sales — leads</h2>
-        <p className="mt-1 text-sm text-muted">
-          Borrowers who registered but have no active loan application.
-        </p>
+      <PageTitle
+        title="Leads"
+        subtitle="Registered users who have not applied for a loan yet."
+      />
+
+      <div className="rounded-lg bg-accent-soft px-4 py-3 text-sm font-medium text-accent-deep">
+        This list is read-only. Sales has no loan actions.
       </div>
 
-      {loading ? <p className="text-sm text-muted">Loading…</p> : null}
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
-      {!loading && !error && items.length === 0 ? (
-        <p className="text-sm text-muted">No open leads right now.</p>
-      ) : null}
+      {error ? <p className="text-sm text-danger">{error}</p> : null}
 
-      <ul className="space-y-2">
-        {items.map((lead) => (
-          <li key={lead.id}>
-            <Link
-              href={`/dashboard/sales/${lead.id}`}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3 hover:border-accent"
-            >
-              <div>
-                <p className="font-medium text-ink">{lead.fullName}</p>
-                <p className="text-sm text-muted">{lead.email}</p>
-              </div>
-              <span className="text-xs font-medium text-accent">
-                {lead.profileComplete ? 'Profile complete' : 'Profile incomplete'}
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <Panel className="overflow-x-auto p-0 shadow-sm">
+        {loading ? <p className="p-6 text-sm text-muted">Loading…</p> : null}
+        {!loading ? (
+          <table className="w-full min-w-[640px] text-left text-sm">
+            <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Name</th>
+                <th className="px-4 py-3 font-semibold">Email</th>
+                <th className="px-4 py-3 font-semibold">Registered</th>
+                <th className="px-4 py-3 font-semibold">Progress</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-muted">
+                    No open leads right now.
+                  </td>
+                </tr>
+              ) : (
+                items.map((lead) => (
+                  <tr key={lead.id} className="border-b border-border last:border-0">
+                    <td className="px-4 py-3 font-semibold text-ink">{lead.fullName}</td>
+                    <td className="px-4 py-3 text-ink">{lead.email}</td>
+                    <td className="px-4 py-3 text-muted">
+                      {new Date(lead.createdAt).toLocaleDateString('en-GB', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge
+                        status={
+                          lead.progress ??
+                          (lead.profileComplete ? 'DETAILS_DONE' : 'SIGNED_UP')
+                        }
+                      />
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        ) : null}
+      </Panel>
     </section>
   );
 }

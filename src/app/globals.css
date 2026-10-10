@@ -1,30 +1,91 @@
 @import "tailwindcss";
 
-/* CreditSea brand tokens (from creditsea.com) */
+/* LoanDesk design system (from UI PDF) */
 :root {
-  --background: #f5f7ff;
-  --foreground: #44465b;
+  --background: #f4f5f7;
+  --foreground: #3d4654;
   --card: #ffffff;
-  --accent: #0075ff;
-  --accent-hover: #0066dd;
-  --accent-soft: #e8f1ff;
-  --accent-deep: #004699;
-  --muted: #4b5563;
-  --border: #d1d1d1;
-  --ink: #060606;
+  --ink: #15202b;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --teal: #0a736e;
+  --teal-hover: #08605c;
+  --teal-soft: #e6f4f3;
+  --navy: #1a263e;
+  --success: #0a736e;
+  --success-soft: #e6f4f3;
+  --danger: #b91c1c;
+  --danger-soft: #fef2f2;
+  --warn: #c2410c;
+  --warn-soft: #fff7ed;
+  --accent: var(--teal);
+  --accent-hover: var(--teal-hover);
+  --accent-soft: var(--teal-soft);
+  --accent-deep: #064e4b;
+  --desk: #0a736e;
+  --desk-fg: #ffffff;
+}
+
+/* Ops desk header colors from PDF */
+[data-desk='sales'] {
+  --desk: #6a29d4;
+  --accent: #6a29d4;
+  --accent-hover: #5b21b6;
+  --accent-soft: #f3e8ff;
+  --accent-deep: #5b21b6;
+}
+[data-desk='sanction'] {
+  --desk: #2563eb;
+  --accent: #0a736e;
+  --accent-hover: #08605c;
+  --accent-soft: #e6f4f3;
+  --accent-deep: #064e4b;
+}
+[data-desk='disbursement'] {
+  --desk: #0f766e;
+  --accent: #0a736e;
+  --accent-hover: #08605c;
+  --accent-soft: #e6f4f3;
+  --accent-deep: #064e4b;
+}
+[data-desk='collection'] {
+  --desk: #c2410c;
+  --accent: #c2410c;
+  --accent-hover: #9a3412;
+  --accent-soft: #fff7ed;
+  --accent-deep: #9a3412;
+}
+[data-desk='admin'] {
+  --desk: #1a263e;
+  --accent: #1a263e;
+  --accent-hover: #0f172a;
+  --accent-soft: #eef2ff;
+  --accent-deep: #1a263e;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-teal: var(--teal);
+  --color-teal-hover: var(--teal-hover);
+  --color-teal-soft: var(--teal-soft);
+  --color-navy: var(--navy);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
   --color-accent-deep: var(--accent-deep);
-  --color-muted: var(--muted);
-  --color-border: var(--border);
-  --color-ink: var(--ink);
+  --color-desk: var(--desk);
+  --color-desk-fg: var(--desk-fg);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -32,5 +93,9 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+input[type='range'] {
+  accent-color: var(--accent);
 }

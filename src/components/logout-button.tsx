@@ -15,7 +15,7 @@ export function LogoutButton() {
         logout();
         router.replace('/login');
       }}
-      className="rounded-md border border-border px-3 py-1.5 text-sm text-foreground hover:bg-accent-soft"
+      className="rounded-xl border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-accent-soft"
     >
       Log out
     </button>

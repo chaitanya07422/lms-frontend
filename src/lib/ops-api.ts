@@ -9,12 +9,38 @@ export type LeadSummary = {
   email: string;
   fullName: string;
   profileComplete: boolean;
+  hasSalarySlip?: boolean;
+  progress?: 'SIGNED_UP' | 'DETAILS_DONE' | 'SLIP_UPLOADED';
   createdAt: string;
 };
+
+export type AdminSummary = {
+  counts: {
+    applied: number;
+    sanctioned: number;
+    disbursed: number;
+    closed: number;
+    rejected: number;
+    leads: number;
+  };
+  recentActivity: Array<{
+    loanId: string;
+    loanRef: string;
+    applicantName: string;
+    event: string;
+    by: string;
+    at: string;
+  }>;
+};
+
+export function getAdminSummary(): Promise<AdminSummary> {
+  return apiRequest('/ops/admin/summary');
+}
 
 export type QueueLoan = LoanDto & {
   borrowerName: string;
   borrowerEmail: string;
+  borrowerPan?: string;
 };
 
 export type PaymentDto = {
@@ -91,7 +117,7 @@ export async function listCollectionQueue(): Promise<QueueLoan[]> {
 }
 
 export function getCollectionLoan(loanId: string): Promise<{
-  loan: LoanDto;
+  loan: QueueLoan;
   payments: PaymentDto[];
 }> {
   return apiRequest(`/ops/collection/loans/${loanId}`);

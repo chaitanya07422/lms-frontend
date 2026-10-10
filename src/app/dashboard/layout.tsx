@@ -1,14 +1,21 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 
 import { AuthGuard } from '@/components/auth-guard';
-import { LogoutButton } from '@/components/logout-button';
+import { DeskHeader } from '@/components/shell/app-header';
 import { useAuth } from '@/context/auth-context';
-import { APP_NAME } from '@/lib/config';
 import { modulesForRole } from '@/lib/roles';
+
+const DESK: Record<string, string> = {
+  admin: 'Admin Console',
+  sales: 'Sales Desk',
+  sanction: 'Sanction Desk',
+  disbursement: 'Disbursement Desk',
+  collection: 'Collection Desk',
+};
 
 const LABELS: Record<string, string> = {
   sales: 'Sales',
@@ -18,66 +25,73 @@ const LABELS: Record<string, string> = {
 };
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const modules = user ? modulesForRole(user.role) : [];
+  const deskKey = user?.role === 'admin' ? 'admin' : user?.role ?? 'admin';
+  const deskLabel = user ? DESK[user.role] ?? 'Operations' : 'Operations';
+  const roleLabel = user?.role
+    ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
+    : '';
+
+  const tabs =
+    user?.role === 'admin' ? (
+      <>
+        <AdminTab href="/dashboard" label="Overview" active={pathname === '/dashboard'} />
+        {modules.map((mod) => (
+          <AdminTab
+            key={mod}
+            href={`/dashboard/${mod}`}
+            label={LABELS[mod] ?? mod}
+            active={pathname.startsWith(`/dashboard/${mod}`)}
+          />
+        ))}
+        <AdminTab
+          href="/dashboard/admin/users"
+          label="Users"
+          active={pathname.startsWith('/dashboard/admin')}
+        />
+      </>
+    ) : null;
 
   return (
     <AuthGuard allow="ops">
-      <div className="min-h-screen md:grid md:grid-cols-[220px_1fr]">
-        <aside className="border-b border-border bg-card md:border-b-0 md:border-r">
-          <div className="px-4 py-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">{APP_NAME}</p>
-            <h1 className="text-lg font-semibold text-ink">Operations</h1>
-            <p className="mt-1 text-xs text-muted">{user?.role}</p>
-          </div>
-          <nav className="flex gap-1 overflow-x-auto px-2 pb-3 md:flex-col md:overflow-visible">
-            <Link
-              href="/dashboard"
-              className={`rounded-md px-3 py-2 text-sm ${
-                pathname === '/dashboard'
-                  ? 'bg-accent-soft text-accent'
-                  : 'text-foreground hover:bg-accent-soft/60'
-              }`}
-            >
-              Overview
-            </Link>
-            {modules.map((mod) => {
-              const href = `/dashboard/${mod}`;
-              const active = pathname.startsWith(href);
-              return (
-                <Link
-                  key={mod}
-                  href={href}
-                  className={`rounded-md px-3 py-2 text-sm ${
-                    active
-                      ? 'bg-accent-soft text-accent'
-                      : 'text-foreground hover:bg-accent-soft/60'
-                  }`}
-                >
-                  {LABELS[mod] ?? mod}
-                </Link>
-              );
-            })}
-            {user?.role === 'admin' ? (
-              <Link
-                href="/dashboard/admin/users"
-                className={`rounded-md px-3 py-2 text-sm ${
-                  pathname.startsWith('/dashboard/admin')
-                    ? 'bg-accent-soft text-accent'
-                    : 'text-foreground hover:bg-accent-soft/60'
-                }`}
-              >
-                Create user
-              </Link>
-            ) : null}
-          </nav>
-          <div className="border-t border-border px-4 py-4">
-            <LogoutButton />
-          </div>
-        </aside>
-        <main className="px-4 py-8 md:px-8">{children}</main>
+      <div className="min-h-screen bg-background" data-desk={deskKey}>
+        <DeskHeader
+          deskLabel={deskLabel}
+          roleLabel={roleLabel}
+          tabs={tabs}
+          onLogout={() => {
+            logout();
+            router.replace('/login');
+          }}
+        />
+        <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
       </div>
     </AuthGuard>
+  );
+}
+
+function AdminTab({
+  href,
+  label,
+  active,
+}: {
+  href: string;
+  label: string;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`pb-2 text-sm font-medium ${
+        active
+          ? 'border-b-2 border-white text-white'
+          : 'border-b-2 border-transparent text-white/70 hover:text-white'
+      }`}
+    >
+      {label}
+    </Link>
   );
 }

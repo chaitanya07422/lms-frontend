@@ -1,8 +1,11 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { FormEvent, useEffect, useState } from 'react';
 
 import { BreResultPanel } from '@/components/borrower/bre-result';
+import { Field, PrimaryButton, TextInput } from '@/components/ui/field';
+import { Panel, PageTitle } from '@/components/ui/panel';
 import { useAuth } from '@/context/auth-context';
 import { updateProfile } from '@/lib/borrower-api';
 import { breFromApiError, toDateInputValue } from '@/lib/bre-errors';
@@ -17,6 +20,7 @@ import type { BreResult } from '@/types/loan';
 
 export default function BorrowerProfilePage() {
   const { user, refreshUser } = useAuth();
+  const router = useRouter();
   const [fullName, setFullName] = useState('');
   const [pan, setPan] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
@@ -27,9 +31,7 @@ export default function BorrowerProfilePage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!user) {
-      return;
-    }
+    if (!user) return;
     setFullName(user.fullName ?? '');
     setPan(user.pan ?? '');
     setDateOfBirth(toDateInputValue(user.dateOfBirth));
@@ -39,17 +41,10 @@ export default function BorrowerProfilePage() {
     if (user.employmentMode) {
       setEmploymentMode(user.employmentMode as EmploymentMode);
     }
+    if (user.profileComplete) {
+      setBre({ passed: true, failures: [] });
+    }
   }, [user]);
-
-  function body() {
-    return {
-      fullName: fullName.trim(),
-      pan: pan.trim().toUpperCase(),
-      dateOfBirth,
-      monthlySalaryPaise: rupeesToPaise(salaryRupees),
-      employmentMode,
-    };
-  }
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -57,100 +52,112 @@ export default function BorrowerProfilePage() {
     setBre(null);
     setBusy(true);
     try {
-      const result = await updateProfile(body());
+      const result = await updateProfile({
+        fullName: fullName.trim(),
+        pan: pan.trim().toUpperCase(),
+        dateOfBirth,
+        monthlySalaryPaise: rupeesToPaise(salaryRupees),
+        employmentMode,
+      });
       setBre(result.bre);
       await refreshUser();
+      if (result.bre.passed) {
+        router.push('/borrower/salary-slip');
+      }
     } catch (err) {
       const fromBre = breFromApiError(err);
-      if (fromBre) {
-        setBre(fromBre);
-      } else {
-        setError(err instanceof ApiError ? err.message : 'Could not save profile');
-      }
+      if (fromBre) setBre(fromBre);
+      else setError(err instanceof ApiError ? err.message : 'Could not save profile');
     } finally {
       setBusy(false);
     }
   }
 
-  return (
-    <section className="rounded-2xl border border-border bg-card p-6">
-      <h2 className="text-xl font-semibold text-ink">Profile</h2>
-      <p className="mt-1 text-sm text-muted">
-        Enter your details. We check age, salary, PAN, and employment when you save.
-      </p>
+  const canContinue = Boolean(bre?.passed || user?.profileComplete);
 
-      <form className="mt-6 grid gap-4 sm:grid-cols-2" onSubmit={onSubmit}>
-        <label className="block text-sm sm:col-span-2">
-          <span className="mb-1 block">Full name</span>
-          <input
-            required
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-accent"
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="mb-1 block">PAN</span>
-          <input
+  return (
+    <Panel className="max-w-xl shadow-sm">
+      <PageTitle
+        title="Personal details"
+        subtitle="We check your details against our eligibility rules before you continue."
+      />
+
+      <form className="space-y-4" onSubmit={onSubmit}>
+        <Field label="Full Name">
+          <TextInput required value={fullName} onChange={(e) => setFullName(e.target.value)} />
+        </Field>
+        <Field label="PAN" hint="5 letters, 4 digits, 1 letter">
+          <TextInput
             required
             value={pan}
             onChange={(e) => setPan(e.target.value.toUpperCase())}
             placeholder="ABCDE1234F"
-            className="w-full rounded-lg border border-border px-3 py-2 uppercase outline-none focus:border-accent"
+            className="uppercase"
           />
-        </label>
-        <label className="block text-sm">
-          <span className="mb-1 block">Date of birth</span>
-          <input
+        </Field>
+        <Field label="Date of Birth" hint="Age must be 23 to 50">
+          <TextInput
             type="date"
             required
             value={dateOfBirth}
             onChange={(e) => setDateOfBirth(e.target.value)}
-            className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-accent"
           />
-        </label>
-        <label className="block text-sm">
-          <span className="mb-1 block">Monthly salary (₹)</span>
-          <input
+        </Field>
+        <Field label="Monthly Salary" hint="Minimum ₹25,000">
+          <TextInput
             type="number"
             required
             min={0}
             step={1000}
             value={salaryRupees}
             onChange={(e) => setSalaryRupees(Number(e.target.value))}
-            className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-accent"
           />
-        </label>
-        <label className="block text-sm">
-          <span className="mb-1 block">Employment</span>
-          <select
-            value={employmentMode}
-            onChange={(e) => setEmploymentMode(e.target.value as EmploymentMode)}
-            className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-accent"
-          >
-            {EMPLOYMENT_MODES.map((mode) => (
-              <option key={mode} value={mode}>
-                {mode}
-              </option>
-            ))}
-          </select>
-        </label>
+        </Field>
 
-        <div className="sm:col-span-2">
-          <button
-            type="submit"
-            disabled={busy}
-            className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-60"
-          >
-            {busy ? 'Saving…' : 'Save profile'}
-          </button>
+        <div>
+          <p className="mb-2 text-sm font-medium text-ink">Employment Mode</p>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {EMPLOYMENT_MODES.map((mode) => {
+              const selected = employmentMode === mode;
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setEmploymentMode(mode)}
+                  className={`flex items-center gap-2 rounded-lg border px-3 py-3 text-left text-sm font-medium ${
+                    selected
+                      ? 'border-teal bg-teal-soft text-teal'
+                      : 'border-border bg-card text-ink hover:bg-background'
+                  }`}
+                >
+                  <span
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+                      selected ? 'border-teal' : 'border-border'
+                    }`}
+                  >
+                    {selected ? <span className="h-2 w-2 rounded-full bg-teal" /> : null}
+                  </span>
+                  {mode === 'Self-Employed' ? 'Self-employed' : mode}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </form>
 
-      <div className="mt-6 space-y-3">
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
         {bre ? <BreResultPanel bre={bre} /> : null}
-      </div>
-    </section>
+        {error ? <p className="text-sm text-danger">{error}</p> : null}
+
+        <PrimaryButton
+          type="submit"
+          disabled={busy || (Boolean(bre) && !bre?.passed && !canContinue && busy)}
+          className="bg-teal hover:bg-teal-hover"
+        >
+          {busy ? 'Checking…' : 'Continue'}
+        </PrimaryButton>
+        {!canContinue && bre && !bre.passed ? (
+          <p className="text-xs text-muted">Continue unlocks once every rule passes.</p>
+        ) : null}
+      </form>
+    </Panel>
   );
 }

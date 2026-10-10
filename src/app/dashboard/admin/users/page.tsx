@@ -5,6 +5,7 @@ import { FormEvent, useState } from 'react';
 import { Field, PrimaryButton, TextInput } from '@/components/ui/field';
 import { Panel } from '@/components/ui/panel';
 import { createUserByAdmin } from '@/lib/ops-api';
+import { PASSWORD_RULES_HINT, passwordMeetsRules } from '@/lib/password';
 import { ApiError } from '@/types/api';
 import type { OpsRole } from '@/types/user';
 
@@ -63,9 +64,13 @@ export default function AdminCreateUserPage() {
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
-    setBusy(true);
     setError(null);
     setSuccess(null);
+    if (!passwordMeetsRules(password)) {
+      setError(PASSWORD_RULES_HINT);
+      return;
+    }
+    setBusy(true);
     try {
       const created = await createUserByAdmin({
         fullName: fullName.trim(),
@@ -107,7 +112,7 @@ export default function AdminCreateUserPage() {
       <Panel className="shadow-sm">
         <h3 className="text-base font-bold text-ink">Create user</h3>
         <p className="mt-1 text-sm text-muted">
-          Password must be at least 8 characters. Share credentials securely after create.
+          {PASSWORD_RULES_HINT}. Share credentials securely after create.
         </p>
 
         <form onSubmit={onSubmit} className="mt-6 space-y-5">
@@ -132,12 +137,12 @@ export default function AdminCreateUserPage() {
             </Field>
           </div>
 
-          <Field label="Password" hint="Minimum 8 characters">
+          <Field label="Password" hint={PASSWORD_RULES_HINT}>
             <TextInput
               type="password"
               required
               minLength={8}
-              placeholder="••••••••"
+              placeholder="e.g. Password123!"
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

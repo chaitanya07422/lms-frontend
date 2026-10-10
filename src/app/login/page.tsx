@@ -8,6 +8,7 @@ import { Field, TextInput, PrimaryButton } from '@/components/ui/field';
 import { Panel } from '@/components/ui/panel';
 import { useAuth } from '@/context/auth-context';
 import { APP_NAME } from '@/lib/config';
+import { PASSWORD_RULES_HINT, passwordMeetsRules } from '@/lib/password';
 import { homePathForRole } from '@/lib/roles';
 import { ApiError } from '@/types/api';
 
@@ -36,6 +37,10 @@ export default function LoginPage() {
   async function onRegister(event: FormEvent) {
     event.preventDefault();
     setRegError(null);
+    if (!passwordMeetsRules(regPassword)) {
+      setRegError(PASSWORD_RULES_HINT);
+      return;
+    }
     setRegBusy(true);
     try {
       const nextUser = await register(regEmail.trim(), regPassword, regName.trim());
@@ -134,12 +139,12 @@ export default function LoginPage() {
                   autoComplete="email"
                 />
               </Field>
-              <Field label="Password" hint="At least 8 characters">
+              <Field label="Password" hint={PASSWORD_RULES_HINT}>
                 <TextInput
                   type="password"
                   required
                   minLength={8}
-                  placeholder="Create a password"
+                  placeholder="e.g. Password123!"
                   value={regPassword}
                   onChange={(e) => setRegPassword(e.target.value)}
                   autoComplete="new-password"

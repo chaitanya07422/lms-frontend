@@ -41,6 +41,7 @@ export default function ApplyLoanPage() {
       .catch(() => setSlip(null));
   }, []);
 
+  // Debounce live quote so slider drags don't spam /loans/preview.
   useEffect(() => {
     let cancelled = false;
     setQuoting(true);

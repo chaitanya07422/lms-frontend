@@ -20,6 +20,7 @@ export async function apiRequest<T>(
   options: RequestOptions = {},
 ): Promise<T> {
   const headers = new Headers();
+  // token: null skips Authorization (login/register); undefined uses localStorage.
   const token = options.token === undefined ? getStoredToken() : options.token;
 
   if (token) {

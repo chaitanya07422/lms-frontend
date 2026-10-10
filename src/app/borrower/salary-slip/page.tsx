@@ -3,6 +3,10 @@
 import { FormEvent, useEffect, useState } from 'react';
 
 import { getLatestSalarySlip, uploadSalarySlip } from '@/lib/borrower-api';
+import {
+  MAX_SALARY_SLIP_BYTES,
+  validateSalarySlipFile,
+} from '@/lib/upload-limits';
 import { ApiError } from '@/types/api';
 import type { SalarySlipDto } from '@/types/loan';
 
@@ -19,10 +23,34 @@ export default function SalarySlipPage() {
       .catch(() => setLatest(null));
   }, []);
 
+  function onFileChange(next: File | null) {
+    setSuccess(null);
+    if (!next) {
+      setFile(null);
+      setError(null);
+      return;
+    }
+    // Client-side gate; API also enforces PDF/JPG/PNG ≤ 5 MB.
+    const invalid = validateSalarySlipFile(next);
+    if (invalid) {
+      setFile(null);
+      setError(invalid);
+      return;
+    }
+    setFile(next);
+    setError(null);
+  }
+
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (!file) {
       setError('Choose a file first');
+      return;
+    }
+    const invalid = validateSalarySlipFile(file);
+    if (invalid) {
+      setError(invalid);
+      setFile(null);
       return;
     }
     setError(null);
@@ -44,7 +72,7 @@ export default function SalarySlipPage() {
     <section className="rounded-2xl border border-border bg-card p-6">
       <h2 className="text-xl font-semibold text-ink">Salary slip</h2>
       <p className="mt-1 text-sm text-muted">
-        Accepts PDF, JPG, or PNG up to 5 MB. Stored via the API (local or OCI).
+        PDF, JPG, or PNG only — max 5 MB (assignment Step 3). Rejected files are not uploaded.
       </p>
 
       <form className="mt-6 space-y-4" onSubmit={onSubmit}>
@@ -53,13 +81,18 @@ export default function SalarySlipPage() {
           <input
             type="file"
             accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="block w-full text-sm"
+            onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
+            className="block w-full cursor-pointer text-sm file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-accent file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-accent-hover"
           />
+          <span className="mt-1 block text-xs text-muted">
+            {file
+              ? `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB / max ${(MAX_SALARY_SLIP_BYTES / (1024 * 1024)).toFixed(0)} MB)`
+              : 'Click “Choose File”, pick a PDF/JPG/PNG (≤ 5 MB), then press Upload.'}
+          </span>
         </label>
         <button
           type="submit"
-          disabled={busy || !file}
+          disabled={busy}
           className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-60"
         >
           {busy ? 'Uploading…' : 'Upload'}

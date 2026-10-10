@@ -43,8 +43,8 @@ export default function LoanDetailPage() {
     return (
       <Panel>
         <p className="text-sm text-danger">{error}</p>
-        <Link href="/borrower/loans" className="mt-4 inline-block text-sm text-accent underline">
-          Back to loans
+        <Link href="/borrower" className="mt-4 inline-block text-sm font-semibold text-teal hover:underline">
+          ← Back to account
         </Link>
       </Panel>
     );
@@ -56,6 +56,13 @@ export default function LoanDetailPage() {
 
   return (
     <div className="space-y-4">
+      <Link
+        href="/borrower"
+        className="inline-flex text-sm font-semibold text-teal hover:underline"
+      >
+        ← Back to account
+      </Link>
+
       <Panel>
         <p className="text-sm font-medium text-success">
           Your loan application has been submitted.

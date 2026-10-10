@@ -65,14 +65,16 @@ export function ProgressStepper({ steps }: { steps: WizardStep[] }) {
 export function WizardShell({
   steps,
   children,
+  showSteps = true,
 }: {
   steps: WizardStep[];
   children: React.ReactNode;
+  showSteps?: boolean;
 }) {
   return (
     <div className="mx-auto max-w-5xl px-4 pb-12">
-      <ProgressStepper steps={steps} />
-      <div className="mt-8 min-w-0">{children}</div>
+      {showSteps ? <ProgressStepper steps={steps} /> : null}
+      <div className={showSteps ? 'mt-8 min-w-0' : 'mt-8 min-w-0 pt-2'}>{children}</div>
     </div>
   );
 }

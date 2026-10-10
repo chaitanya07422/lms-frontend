@@ -92,6 +92,15 @@ export default function BorrowerProfilePage() {
   }
 
   return (
+    <div className="space-y-4">
+      {user?.profileComplete ? (
+        <Link
+          href="/borrower"
+          className="inline-flex text-sm font-semibold text-teal hover:underline"
+        >
+          ← Back to account
+        </Link>
+      ) : null}
     <Panel className="max-w-xl shadow-sm">
       <PageTitle
         title="Personal details"
@@ -206,5 +215,6 @@ export default function BorrowerProfilePage() {
         ) : null}
       </form>
     </Panel>
+    </div>
   );
 }

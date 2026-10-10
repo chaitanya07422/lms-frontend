@@ -27,8 +27,10 @@ export function borrowerWizardSteps(opts: {
     apply: hasApplied,
   };
 
+  // Account is signup only — after login it stays Done and is not a link
+  // (avoids jumping into personal details / dashboard by mistake).
   const href: Record<Key, string | undefined> = {
-    account: authenticated ? '/borrower' : '/register',
+    account: authenticated ? undefined : '/login',
     profile: authenticated ? '/borrower/profile' : undefined,
     salary: authenticated ? '/borrower/salary-slip' : undefined,
     apply: authenticated ? '/borrower/apply' : undefined,

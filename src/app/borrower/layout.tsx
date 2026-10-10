@@ -39,11 +39,17 @@ export default function BorrowerLayout({ children }: { children: ReactNode }) {
     pathname,
   });
 
+  // After apply, hide the wizard rail entirely (account dashboard / edit pages).
+  const applicationComplete = Boolean(user?.profileComplete && hasSlip && hasApplied);
+  const showSteps = !applicationComplete;
+
   return (
     <AuthGuard allow="borrower">
       <div className="min-h-screen bg-background">
         <BorrowerHeader userName={user?.fullName} />
-        <WizardShell steps={steps}>{children}</WizardShell>
+        <WizardShell steps={steps} showSteps={showSteps}>
+          {children}
+        </WizardShell>
       </div>
     </AuthGuard>
   );

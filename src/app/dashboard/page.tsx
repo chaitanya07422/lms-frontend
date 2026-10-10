@@ -1,20 +1,13 @@
 'use client';
 
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { PageTitle, Panel } from '@/components/ui/panel';
 import { useAuth } from '@/context/auth-context';
-import { modulesForRole } from '@/lib/roles';
+import { homePathForRole } from '@/lib/roles';
 import { getAdminSummary, type AdminSummary } from '@/lib/ops-api';
 import { ApiError } from '@/types/api';
-
-const BLURBS: Record<string, string> = {
-  sales: 'Leads — registered borrowers without an active application',
-  sanction: 'APPLIED loans — approve or reject',
-  disbursement: 'SANCTIONED loans — mark disbursed',
-  collection: 'DISBURSED loans — record UTR payments',
-};
 
 const COUNT_PILL: Record<string, string> = {
   Applied: 'bg-amber-100 text-amber-800',
@@ -25,11 +18,18 @@ const COUNT_PILL: Record<string, string> = {
 };
 
 export default function DashboardHomePage() {
-  const { user } = useAuth();
-  const modules = user ? modulesForRole(user.role) : [];
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
   const isAdmin = user?.role === 'admin';
   const [summary, setSummary] = useState<AdminSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isLoading || !user) return;
+    if (!isAdmin) {
+      router.replace(homePathForRole(user.role));
+    }
+  }, [isAdmin, isLoading, router, user]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -42,22 +42,7 @@ export default function DashboardHomePage() {
 
   if (!isAdmin) {
     return (
-      <section>
-        <PageTitle title={`Hello, ${user?.fullName}`} subtitle="Your desk module." />
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {modules.map((mod) => (
-            <li key={mod}>
-              <Link
-                href={`/dashboard/${mod}`}
-                className="block rounded-2xl border border-border bg-card px-4 py-4 shadow-sm hover:border-accent"
-              >
-                <p className="text-sm font-semibold capitalize text-ink">{mod}</p>
-                <p className="mt-1 text-sm text-muted">{BLURBS[mod]}</p>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <div className="text-sm text-muted">Opening your desk…</div>
     );
   }
 

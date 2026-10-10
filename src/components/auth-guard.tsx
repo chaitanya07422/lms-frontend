@@ -22,7 +22,10 @@ function isAllowed(userRole: UserRole, allow: AuthGuardProps['allow']): boolean 
   if (allow === 'ops') {
     return isOpsRole(userRole);
   }
-  // Single ops module (admin is allowed via modulesForRole).
+  if (allow === 'admin') {
+    return userRole === 'admin';
+  }
+  // Single ops module — admin is allowed via modulesForRole.
   if (OPS_MODULES.has(allow)) {
     return modulesForRole(userRole).includes(allow);
   }

@@ -1,8 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 
+import { useAuth } from '@/context/auth-context';
 import { APP_NAME } from '@/lib/config';
 import { initials } from '@/lib/loan-ref';
 
@@ -14,6 +16,8 @@ export function BorrowerHeader({
   userName?: string;
   guest?: boolean;
 }) {
+  const { logout } = useAuth();
+  const router = useRouter();
   const label = guest ? 'Guest' : userName;
   return (
     <header className="border-b border-border bg-card">
@@ -27,6 +31,18 @@ export function BorrowerHeader({
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-navy text-xs font-bold text-white">
               {guest ? 'G' : initials(userName ?? 'U')}
             </span>
+            {!guest ? (
+              <button
+                type="button"
+                onClick={() => {
+                  logout();
+                  router.replace('/login');
+                }}
+                className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-ink hover:bg-background"
+              >
+                Log out
+              </button>
+            ) : null}
           </div>
         ) : null}
       </div>

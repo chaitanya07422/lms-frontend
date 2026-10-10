@@ -1,16 +1,14 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { FormEvent, useState } from 'react';
 
-import { useAuth } from '@/context/auth-context';
+import { Field, PrimaryButton, TextInput, TextSelect } from '@/components/ui/field';
+import { PageTitle, Panel } from '@/components/ui/panel';
 import { createUserByAdmin } from '@/lib/ops-api';
 import { ApiError } from '@/types/api';
 import { USER_ROLES, type UserRole } from '@/types/user';
 
 export default function AdminCreateUserPage() {
-  const { user, isLoading } = useAuth();
-  const router = useRouter();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,12 +16,6 @@ export default function AdminCreateUserPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    if (!isLoading && user?.role !== 'admin') {
-      router.replace('/dashboard');
-    }
-  }, [isLoading, router, user]);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -48,76 +40,55 @@ export default function AdminCreateUserPage() {
     }
   }
 
-  if (isLoading || user?.role !== 'admin') {
-    return <p className="text-sm text-muted">Loading…</p>;
-  }
-
   return (
-    <section className="max-w-lg space-y-4">
-      <div>
-        <h2 className="text-2xl font-semibold text-ink">Create user</h2>
-        <p className="mt-1 text-sm text-muted">
-          Admin-only. Assigned role controls module access after login (not the email address).
-        </p>
-      </div>
-
-      <form onSubmit={onSubmit} className="rounded-2xl border border-border bg-card p-6 space-y-3">
-        <label className="block text-sm">
-          <span className="mb-1 block">Full name</span>
-          <input
-            required
-            minLength={2}
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-accent"
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="mb-1 block">Email</span>
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-accent"
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="mb-1 block">Password</span>
-          <input
-            type="password"
-            required
-            minLength={8}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-accent"
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="mb-1 block">Role</span>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value as UserRole)}
-            className="w-full rounded-lg border border-border px-3 py-2 outline-none focus:border-accent"
-          >
-            {USER_ROLES.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-60"
-        >
-          {busy ? 'Creating…' : 'Create user'}
-        </button>
-      </form>
-
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
-      {success ? <p className="text-sm text-emerald-700">{success}</p> : null}
+    <section className="max-w-lg">
+      <PageTitle
+        title="Create user"
+        subtitle="Admin-only. Assigned role controls module access after login."
+      />
+      <Panel className="shadow-sm">
+        <form onSubmit={onSubmit} className="space-y-4">
+          <Field label="Full name">
+            <TextInput
+              required
+              minLength={2}
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+            />
+          </Field>
+          <Field label="Email">
+            <TextInput
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </Field>
+          <Field label="Password">
+            <TextInput
+              type="password"
+              required
+              minLength={8}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </Field>
+          <Field label="Role">
+            <TextSelect value={role} onChange={(e) => setRole(e.target.value as UserRole)}>
+              {USER_ROLES.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </TextSelect>
+          </Field>
+          <PrimaryButton type="submit" disabled={busy}>
+            {busy ? 'Creating…' : 'Create user'}
+          </PrimaryButton>
+        </form>
+        {error ? <p className="mt-4 text-sm text-danger">{error}</p> : null}
+        {success ? <p className="mt-4 text-sm text-success">{success}</p> : null}
+      </Panel>
     </section>
   );
 }

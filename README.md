@@ -9,8 +9,13 @@ Two surfaces:
 
 Backend: sibling repo **`lms-backend`**.
 
-**Live URL:** [https://creditsea.duckdns.org](https://creditsea.duckdns.org)  
-**API:** `https://creditsea.duckdns.org/api/v1` · **Health:** `https://creditsea.duckdns.org/api/v1/health`
+| | |
+|--|--|
+| **App** | https://creditsea.duckdns.org |
+| **API** | https://creditsea.duckdns.org/api/v1 |
+| **Health** | https://creditsea.duckdns.org/api/v1/health |
+
+> **Test on production:** Use the seeded accounts below — password: `Password123!` — already in the live DB.
 
 ---
 
@@ -88,7 +93,7 @@ Backend `CORS_ORIGIN` must include `http://localhost:3000`.
 
 ## Login credentials (from backend seed)
 
-Run `npm run seed` in **lms-backend** first. Password for **all** seeded accounts:
+Password for **all** accounts below:
 
 ```text
 Password123!
@@ -103,7 +108,7 @@ Password123!
 | Collection | `collection@lms.local` | Collection only |
 | Borrower | `borrower@lms.local` | Borrower portal only |
 
-New borrowers can **Sign up** from the login page.
+For local setup, run `npm run seed` once in **lms-backend**. New borrowers can also **Sign up** from the login page.
 
 ---
 

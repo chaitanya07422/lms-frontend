@@ -44,7 +44,7 @@ function BorrowerProfileForm() {
   const [fullName, setFullName] = useState('');
   const [pan, setPan] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
-  const [salaryRupees, setSalaryRupees] = useState(MIN_MONTHLY_SALARY_RUPEES);
+  const [salaryRupees, setSalaryRupees] = useState<number | ''>(MIN_MONTHLY_SALARY_RUPEES);
   const [employmentMode, setEmploymentMode] = useState<EmploymentMode>('Salaried');
   const [bre, setBre] = useState<BreResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -165,6 +165,10 @@ function BorrowerProfileForm() {
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (locked) return;
+    if (salaryRupees === '' || Number.isNaN(salaryRupees)) {
+      setError('Enter a monthly salary');
+      return;
+    }
     setError(null);
     setBre(null);
     setBusy(true);
@@ -254,10 +258,13 @@ function BorrowerProfileForm() {
               type="number"
               required
               disabled={locked}
-              min={0}
+              min={MIN_MONTHLY_SALARY_RUPEES}
               step={1000}
               value={salaryRupees}
-              onChange={(e) => setSalaryRupees(Number(e.target.value))}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setSalaryRupees(raw === '' ? '' : Number(raw));
+              }}
             />
           </Field>
         </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { StatusBadge } from '@/components/ops/status-badge';
@@ -11,6 +12,7 @@ import {
   TextArea,
 } from '@/components/ui/field';
 import { PageTitle, Panel } from '@/components/ui/panel';
+import { loanRef } from '@/lib/loan-ref';
 import { formatPaise } from '@/lib/money';
 import {
   approveLoan,
@@ -74,7 +76,7 @@ export default function SanctionQueuePage() {
     <section className="space-y-5">
       <PageTitle
         title="Applied loans"
-        subtitle="Review each application and approve it or reject it with a reason."
+        subtitle="Review each application and approve it or reject it with a reason. Click a loan ref for full details."
       />
 
       {error ? <p className="text-sm text-danger">{error}</p> : null}
@@ -85,6 +87,7 @@ export default function SanctionQueuePage() {
           <table className="w-full min-w-[880px] text-left text-sm">
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
               <tr>
+                <th className="px-4 py-3 font-semibold">Loan ref</th>
                 <th className="px-4 py-3 font-semibold">Applicant</th>
                 <th className="px-4 py-3 font-semibold">PAN</th>
                 <th className="px-4 py-3 font-semibold">Amount</th>
@@ -96,7 +99,7 @@ export default function SanctionQueuePage() {
             <tbody>
               {items.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-muted">
+                  <td colSpan={7} className="px-4 py-8 text-muted">
                     No loans awaiting sanction.
                   </td>
                 </tr>
@@ -104,11 +107,26 @@ export default function SanctionQueuePage() {
                 items.map((loan) => (
                   <tr
                     key={loan.id}
-                    className={`border-b border-border last:border-0 ${
+                    className={`border-b border-border last:border-0 hover:bg-accent-soft/30 ${
                       rejectTarget?.id === loan.id ? 'bg-danger-soft/40' : ''
                     }`}
                   >
-                    <td className="px-4 py-3 font-semibold text-ink">{loan.borrowerName}</td>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/dashboard/sanction/${loan.id}`}
+                        className="font-semibold text-accent hover:underline"
+                      >
+                        {loanRef(loan.id)}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/dashboard/sanction/${loan.id}`}
+                        className="font-semibold text-ink hover:text-accent hover:underline"
+                      >
+                        {loan.borrowerName}
+                      </Link>
+                    </td>
                     <td className="px-4 py-3 font-mono text-xs">{loan.borrowerPan ?? '—'}</td>
                     <td className="px-4 py-3">{formatPaise(loan.principalPaise)}</td>
                     <td className="px-4 py-3">{loan.tenureDays} days</td>

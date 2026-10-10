@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { StatusBadge } from '@/components/ops/status-badge';
@@ -25,12 +26,8 @@ export default function SalesLeadsPage() {
     <section className="space-y-4">
       <PageTitle
         title="Leads"
-        subtitle="Registered users who have not applied for a loan yet."
+        subtitle="Registered users who have not applied for a loan yet. Click a name to open details."
       />
-
-      <div className="rounded-lg bg-accent-soft px-4 py-3 text-sm font-medium text-accent-deep">
-        This list is read-only. Sales has no loan actions.
-      </div>
 
       {error ? <p className="text-sm text-danger">{error}</p> : null}
 
@@ -55,9 +52,26 @@ export default function SalesLeadsPage() {
                 </tr>
               ) : (
                 items.map((lead) => (
-                  <tr key={lead.id} className="border-b border-border last:border-0">
-                    <td className="px-4 py-3 font-semibold text-ink">{lead.fullName}</td>
-                    <td className="px-4 py-3 text-ink">{lead.email}</td>
+                  <tr
+                    key={lead.id}
+                    className="border-b border-border last:border-0 hover:bg-accent-soft/40"
+                  >
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/dashboard/sales/${lead.id}`}
+                        className="font-semibold text-accent hover:underline"
+                      >
+                        {lead.fullName}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/dashboard/sales/${lead.id}`}
+                        className="text-ink hover:text-accent hover:underline"
+                      >
+                        {lead.email}
+                      </Link>
+                    </td>
                     <td className="px-4 py-3 text-muted">
                       {new Date(lead.createdAt).toLocaleDateString('en-GB', {
                         day: '2-digit',

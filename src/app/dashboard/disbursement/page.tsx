@@ -1,11 +1,13 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { StatusBadge } from '@/components/ops/status-badge';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { PrimaryButton } from '@/components/ui/field';
 import { PageTitle, Panel } from '@/components/ui/panel';
+import { loanRef } from '@/lib/loan-ref';
 import { formatPaise } from '@/lib/money';
 import {
   disburseLoan,
@@ -52,16 +54,17 @@ export default function DisbursementQueuePage() {
     <section className="space-y-4">
       <PageTitle
         title="Sanctioned loans"
-        subtitle="Mark a loan as disbursed once the funds are released."
+        subtitle="Mark a loan as disbursed once the funds are released. Click a loan ref for full details."
       />
       {error ? <p className="text-sm text-danger">{error}</p> : null}
 
       <Panel className="overflow-x-auto p-0 shadow-sm">
         {loading ? <p className="p-6 text-sm text-muted">Loading…</p> : null}
         {!loading ? (
-          <table className="w-full min-w-[800px] text-left text-sm">
+          <table className="w-full min-w-[900px] text-left text-sm">
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
               <tr>
+                <th className="px-4 py-3 font-semibold">Loan ref</th>
                 <th className="px-4 py-3 font-semibold">Applicant</th>
                 <th className="px-4 py-3 font-semibold">PAN</th>
                 <th className="px-4 py-3 font-semibold">Amount</th>
@@ -73,14 +76,32 @@ export default function DisbursementQueuePage() {
             <tbody>
               {items.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-muted">
+                  <td colSpan={7} className="px-4 py-8 text-muted">
                     No loans awaiting disbursement.
                   </td>
                 </tr>
               ) : (
                 items.map((loan) => (
-                  <tr key={loan.id} className="border-b border-border last:border-0">
-                    <td className="px-4 py-3 font-semibold text-ink">{loan.borrowerName}</td>
+                  <tr
+                    key={loan.id}
+                    className="border-b border-border last:border-0 hover:bg-accent-soft/40"
+                  >
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/dashboard/disbursement/${loan.id}`}
+                        className="font-semibold text-accent hover:underline"
+                      >
+                        {loanRef(loan.id)}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/dashboard/disbursement/${loan.id}`}
+                        className="font-semibold text-ink hover:text-accent hover:underline"
+                      >
+                        {loan.borrowerName}
+                      </Link>
+                    </td>
                     <td className="px-4 py-3 font-mono text-xs">{loan.borrowerPan ?? '—'}</td>
                     <td className="px-4 py-3">{formatPaise(loan.principalPaise)}</td>
                     <td className="px-4 py-3">{loan.tenureDays} days</td>

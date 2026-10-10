@@ -21,9 +21,12 @@ import {
   MIN_PRINCIPAL_RUPEES,
   MIN_TENURE_DAYS,
 } from '@/lib/loan-limits';
+import { loanRef } from '@/lib/loan-ref';
 import { formatPaise, rupeesToPaise } from '@/lib/money';
 import { ApiError } from '@/types/api';
-import type { BreResult, LoanQuote, SalarySlipDto } from '@/types/loan';
+import type { BreResult, LoanDto, LoanQuote, SalarySlipDto } from '@/types/loan';
+
+type Phase = 'form' | 'reviewing' | 'success';
 
 export default function ApplyLoanPage() {
   const { user } = useAuth();
@@ -35,6 +38,8 @@ export default function ApplyLoanPage() {
   const [bre, setBre] = useState<BreResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [phase, setPhase] = useState<Phase>('form');
+  const [submittedLoan, setSubmittedLoan] = useState<LoanDto | null>(null);
 
   useEffect(() => {
     void getLatestSalarySlip()
@@ -68,15 +73,64 @@ export default function ApplyLoanPage() {
       return;
     }
     setBusy(true);
+    setPhase('reviewing');
     try {
       const loan = await applyLoan(rupeesToPaise(principalRupees), tenureDays, slip.id);
+      setSubmittedLoan(loan);
+      // Keep the reviewing beat visible briefly even if the API is fast.
+      await new Promise((r) => window.setTimeout(r, 1400));
+      setPhase('success');
+      await new Promise((r) => window.setTimeout(r, 1800));
       router.push(`/borrower/loans/${loan.id}`);
     } catch (err) {
+      setPhase('form');
       setBre(breFromApiError(err));
       setError(err instanceof ApiError ? err.message : 'Application failed');
-    } finally {
       setBusy(false);
     }
+  }
+
+  if (phase === 'reviewing' || phase === 'success') {
+    return (
+      <Panel className="mx-auto max-w-md shadow-sm">
+        <div className="flex flex-col items-center px-2 py-10 text-center">
+          {phase === 'reviewing' ? (
+            <>
+              <span
+                className="h-12 w-12 animate-spin rounded-full border-[3px] border-teal-soft border-t-teal"
+                aria-hidden
+              />
+              <h2 className="mt-6 text-xl font-bold text-ink">Reviewing your application</h2>
+              <p className="mt-2 text-sm text-muted">
+                Checking your details and preparing your loan for approval…
+              </p>
+            </>
+          ) : (
+            <>
+              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-teal-soft text-2xl font-bold text-teal">
+                ✓
+              </span>
+              <h2 className="mt-6 text-xl font-bold text-ink">
+                Congratulations{user?.fullName ? `, ${user.fullName.split(' ')[0]}` : ''}!
+              </h2>
+              <p className="mt-2 text-sm text-muted">
+                Your loan application has been submitted
+                {submittedLoan ? (
+                  <>
+                    {' '}
+                    as{' '}
+                    <span className="font-semibold text-ink">
+                      {loanRef(submittedLoan.id)}
+                    </span>
+                  </>
+                ) : null}
+                . Taking you to your loan…
+              </p>
+            </>
+          )}
+        </div>
+      </Panel>
+    );
   }
 
   return (

@@ -20,7 +20,7 @@ const STATE_LABEL: Record<StepState, string> = {
 /** Horizontal stepper matching LoanDesk PDF (line above each step). */
 export function ProgressStepper({ steps }: { steps: WizardStep[] }) {
   return (
-    <nav className="mx-auto w-full max-w-5xl px-4 pt-6 pb-2">
+    <nav className="w-full px-4 pt-6 pb-2 sm:px-6 lg:px-8">
       <ol className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
         {steps.map((step, index) => {
           const line =
@@ -72,7 +72,7 @@ export function WizardShell({
   showSteps?: boolean;
 }) {
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-12">
+    <div className="w-full px-4 pb-12 sm:px-6 lg:px-8">
       {showSteps ? <ProgressStepper steps={steps} /> : null}
       <div className={showSteps ? 'mt-8 min-w-0' : 'mt-8 min-w-0 pt-2'}>{children}</div>
     </div>

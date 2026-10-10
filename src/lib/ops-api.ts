@@ -2,7 +2,7 @@ import { apiRequest } from '@/lib/api';
 import { API_BASE_URL, AUTH_TOKEN_KEY } from '@/lib/config';
 import { ApiError } from '@/types/api';
 import type { LoanDto, SalarySlipDto } from '@/types/loan';
-import type { PublicUser, UserRole } from '@/types/user';
+import type { OpsRole, PublicUser } from '@/types/user';
 
 export type LeadSummary = {
   id: string;
@@ -14,6 +14,16 @@ export type LeadSummary = {
   createdAt: string;
 };
 
+export type AdminActivityRow = {
+  loanId: string;
+  loanRef: string;
+  applicantName: string;
+  event: string;
+  by: string;
+  at: string;
+  cursor: string;
+};
+
 export type AdminSummary = {
   counts: {
     applied: number;
@@ -23,18 +33,20 @@ export type AdminSummary = {
     rejected: number;
     leads: number;
   };
-  recentActivity: Array<{
-    loanId: string;
-    loanRef: string;
-    applicantName: string;
-    event: string;
-    by: string;
-    at: string;
-  }>;
+  recentActivity: AdminActivityRow[];
+  nextCursor: string | null;
+  hasMore: boolean;
 };
 
-export function getAdminSummary(): Promise<AdminSummary> {
-  return apiRequest('/ops/admin/summary');
+export function getAdminSummary(opts?: {
+  cursor?: string;
+  limit?: number;
+}): Promise<AdminSummary> {
+  const params = new URLSearchParams();
+  if (opts?.cursor) params.set('cursor', opts.cursor);
+  if (opts?.limit != null) params.set('limit', String(opts.limit));
+  const qs = params.toString();
+  return apiRequest(`/ops/admin/summary${qs ? `?${qs}` : ''}`);
 }
 
 export type QueueLoan = LoanDto & {
@@ -137,7 +149,7 @@ export async function createUserByAdmin(body: {
   email: string;
   password: string;
   fullName: string;
-  role: UserRole;
+  role: OpsRole;
 }): Promise<PublicUser> {
   const data = await apiRequest<{ user: PublicUser }>('/ops/admin/users', {
     method: 'POST',

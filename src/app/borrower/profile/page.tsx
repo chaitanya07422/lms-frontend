@@ -208,7 +208,7 @@ function BorrowerProfileForm() {
           ← Back to account
         </Link>
       ) : null}
-    <Panel className="max-w-xl shadow-sm">
+    <Panel className="w-full shadow-sm">
       <PageTitle
         title="Personal details"
         subtitle={
@@ -220,45 +220,47 @@ function BorrowerProfileForm() {
         }
       />
 
-      <form className="space-y-4" onSubmit={onSubmit}>
-        <Field label="Full Name">
-          <TextInput
-            required
-            disabled={locked}
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-          />
-        </Field>
-        <Field label="PAN" hint="5 letters, 4 digits, 1 letter">
-          <TextInput
-            required
-            disabled={locked}
-            value={pan}
-            onChange={(e) => setPan(e.target.value.toUpperCase())}
-            placeholder="ABCDE1234F"
-            className="uppercase"
-          />
-        </Field>
-        <Field label="Date of Birth" hint="Age must be 23 to 50">
-          <TextInput
-            type="date"
-            required
-            disabled={locked}
-            value={dateOfBirth}
-            onChange={(e) => setDateOfBirth(e.target.value)}
-          />
-        </Field>
-        <Field label="Monthly Salary" hint="Minimum ₹25,000">
-          <TextInput
-            type="number"
-            required
-            disabled={locked}
-            min={0}
-            step={1000}
-            value={salaryRupees}
-            onChange={(e) => setSalaryRupees(Number(e.target.value))}
-          />
-        </Field>
+      <form className="space-y-5" onSubmit={onSubmit}>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Field label="Full Name">
+            <TextInput
+              required
+              disabled={locked}
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+            />
+          </Field>
+          <Field label="PAN" hint="5 letters, 4 digits, 1 letter">
+            <TextInput
+              required
+              disabled={locked}
+              value={pan}
+              onChange={(e) => setPan(e.target.value.toUpperCase())}
+              placeholder="ABCDE1234F"
+              className="uppercase"
+            />
+          </Field>
+          <Field label="Date of Birth" hint="Age must be 23 to 50">
+            <TextInput
+              type="date"
+              required
+              disabled={locked}
+              value={dateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
+            />
+          </Field>
+          <Field label="Monthly Salary" hint="Minimum ₹25,000">
+            <TextInput
+              type="number"
+              required
+              disabled={locked}
+              min={0}
+              step={1000}
+              value={salaryRupees}
+              onChange={(e) => setSalaryRupees(Number(e.target.value))}
+            />
+          </Field>
+        </div>
 
         <div>
           <p className="mb-2 text-sm font-medium text-ink">Employment Mode</p>
@@ -339,7 +341,7 @@ function BorrowerProfileForm() {
 
       {/* Replace slip only after apply / Account → Edit. First-time wizard uses /borrower/salary-slip. */}
       {accountEditMode ? (
-        <Panel className="max-w-xl shadow-sm">
+        <Panel className="w-full shadow-sm">
           <PageTitle
             title="Salary slip"
             subtitle={

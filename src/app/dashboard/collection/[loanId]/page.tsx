@@ -102,8 +102,14 @@ export default function CollectionDetailPage() {
           <div>
             <h2 className="text-2xl font-semibold text-ink">{loan.borrowerName}</h2>
             <p className="mt-1 text-sm text-muted">
-              {loanRef(loan.id)} · {formatPaise(loan.principalPaise)} · {loan.tenureDays} days
+              <span className="font-semibold text-ink">{loanRef(loan.id)}</span>
+              {' · '}
+              {formatPaise(loan.principalPaise)} · {loan.tenureDays} days
             </p>
+            <p className="mt-1 font-mono text-xs text-muted">Loan ID: {loan.id}</p>
+            {loan.borrowerEmail ? (
+              <p className="mt-0.5 text-xs text-muted">{loan.borrowerEmail}</p>
+            ) : null}
           </div>
           <StatusBadge status={loan.status} />
         </div>

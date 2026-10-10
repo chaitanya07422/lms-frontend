@@ -21,7 +21,7 @@ export function BorrowerHeader({
   const label = guest ? 'Guest' : userName;
   return (
     <header className="border-b border-border bg-card">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3.5">
+      <div className="flex w-full items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
         <Link href="/" className="text-lg font-bold tracking-tight text-teal">
           {APP_NAME}
         </Link>

@@ -92,8 +92,8 @@ export default function ApplyLoanPage() {
 
   if (phase === 'reviewing' || phase === 'success') {
     return (
-      <Panel className="mx-auto max-w-md shadow-sm">
-        <div className="flex flex-col items-center px-2 py-10 text-center">
+      <Panel className="w-full shadow-sm">
+        <div className="flex flex-col items-center px-2 py-16 text-center sm:py-24">
           {phase === 'reviewing' ? (
             <>
               <span

@@ -66,7 +66,7 @@ export default function SalarySlipPage() {
   }
 
   return (
-    <Panel className="max-w-2xl shadow-sm">
+    <Panel className="w-full shadow-sm">
       <PageTitle
         title="Upload your salary slip"
         subtitle="Your slip is stored and linked to your application."

@@ -79,11 +79,7 @@ export default function SalesLeadsPage() {
   const rangeStart = items.length === 0 ? 0 : pageIndex * PAGE_SIZE + 1;
   const rangeEnd = pageIndex * PAGE_SIZE + items.length;
   const rangeLabel =
-    items.length === 0
-      ? '0–0'
-      : hasMore
-        ? `${rangeStart}–${rangeEnd} of many`
-        : `${rangeStart}–${rangeEnd}`;
+    items.length === 0 ? '0–0' : `${rangeStart}–${rangeEnd}`;
 
   const canNewer = pageIndex > 0;
   const canOlder = hasMore && Boolean(nextCursor);

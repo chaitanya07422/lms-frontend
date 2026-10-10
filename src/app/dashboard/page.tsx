@@ -118,11 +118,7 @@ export default function DashboardHomePage() {
   const rangeStart = activity.length === 0 ? 0 : pageIndex * PAGE_SIZE + 1;
   const rangeEnd = pageIndex * PAGE_SIZE + activity.length;
   const rangeLabel =
-    activity.length === 0
-      ? '0–0'
-      : hasMore
-        ? `${rangeStart}–${rangeEnd} of many`
-        : `${rangeStart}–${rangeEnd}`;
+    activity.length === 0 ? '0–0' : `${rangeStart}–${rangeEnd}`;
 
   const canNewer = pageIndex > 0;
   const canOlder = hasMore && Boolean(nextCursor);

@@ -1,0 +1,96 @@
+name: Pipeline
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+        env:
+          # Baked into the client bundle — browser calls Oracle API.
+          NEXT_PUBLIC_API_BASE_URL: http://creditsea.duckdns.org/api/v1
+          NEXT_PUBLIC_APP_NAME: CreditSea
+
+      - name: Pack standalone release
+        run: |
+          mkdir -p release
+          cp -a .next/standalone/. release/
+          mkdir -p release/.next
+          cp -a .next/static release/.next/static
+          if [ -d public ]; then cp -a public release/public; fi
+          cp ecosystem.config.cjs release/ecosystem.config.cjs
+
+      - name: Upload release
+        uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: release
+          retention-days: 1
+
+  deploy:
+    needs: test
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download release
+        uses: actions/download-artifact@v4
+        with:
+          name: release
+          path: release
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Rsync release to server
+        run: |
+          APP=/home/ubuntu/apps/lms-frontend
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "mkdir -p $APP/current"
+          rsync -az --delete \
+            ./release/ \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:$APP/current/"
+
+      - name: Reload PM2
+        run: |
+          APP=/home/ubuntu/apps/lms-frontend
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" "set -e
+            cp $APP/current/ecosystem.config.cjs $APP/ecosystem.config.cjs
+            pm2 startOrReload $APP/ecosystem.config.cjs --update-env
+            pm2 save
+            for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+              if curl -sf -o /dev/null http://127.0.0.1:3000/; then
+                exit 0
+              fi
+              sleep 2
+            done
+            echo 'Frontend health check failed'
+            pm2 logs lms-web --lines 50 --nostream
+            exit 1
+          "

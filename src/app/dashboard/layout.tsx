@@ -28,7 +28,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <aside className="border-b border-border bg-card md:border-b-0 md:border-r">
           <div className="px-4 py-5">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">{APP_NAME}</p>
-            <h1 className="text-lg font-semibold">Operations</h1>
+            <h1 className="text-lg font-semibold text-ink">Operations</h1>
             <p className="mt-1 text-xs text-muted">{user?.role}</p>
           </div>
           <nav className="flex gap-1 overflow-x-auto px-2 pb-3 md:flex-col md:overflow-visible">
@@ -59,6 +59,18 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </Link>
               );
             })}
+            {user?.role === 'admin' ? (
+              <Link
+                href="/dashboard/admin/users"
+                className={`rounded-md px-3 py-2 text-sm ${
+                  pathname.startsWith('/dashboard/admin')
+                    ? 'bg-accent-soft text-accent'
+                    : 'text-foreground hover:bg-accent-soft/60'
+                }`}
+              >
+                Create user
+              </Link>
+            ) : null}
           </nav>
           <div className="border-t border-border px-4 py-4">
             <LogoutButton />

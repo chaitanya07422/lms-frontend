@@ -16,7 +16,7 @@ export function isBorrowerRole(role: UserRole): boolean {
   return role === 'borrower';
 }
 
-/** Modules a role may open in the ops dashboard. */
+/** Nav modules for a role — admin gets all four; access is by role, not email. */
 export function modulesForRole(role: UserRole): OpsRole[] {
   if (role === 'admin') {
     return ['sales', 'sanction', 'disbursement', 'collection'];

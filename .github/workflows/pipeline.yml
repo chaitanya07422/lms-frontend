@@ -49,6 +49,8 @@ jobs:
           name: release
           path: release
           retention-days: 1
+          # Required: standalone needs `.next/` (hidden dirs omitted by default).
+          include-hidden-files: true
 
   deploy:
     needs: test

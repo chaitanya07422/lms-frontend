@@ -92,7 +92,7 @@ export default function CollectionQueuePage() {
 
   return (
     <section>
-      <PageTitle title="Active loans" />
+      <PageTitle title="Loans" />
       {error ? <p className="mb-4 text-sm text-danger">{error}</p> : null}
 
       <Panel className="overflow-x-auto p-0">
@@ -141,7 +141,7 @@ export default function CollectionQueuePage() {
               {items.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-8 text-muted">
-                    No active collection loans.
+                    No collection loans.
                   </td>
                 </tr>
               ) : (

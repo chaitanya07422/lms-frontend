@@ -18,31 +18,28 @@ export function BorrowerHeader({
 }) {
   const { logout } = useAuth();
   const router = useRouter();
-  const label = guest ? 'Guest' : userName;
   return (
     <header className="border-b border-border bg-card">
       <div className="flex w-full items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
         <Link href="/" className="text-lg font-bold tracking-tight text-teal">
           {APP_NAME}
         </Link>
-        {label ? (
+        {!guest && userName ? (
           <div className="flex items-center gap-2.5">
-            <span className="text-sm text-muted">{label}</span>
+            <span className="text-sm text-muted">{userName}</span>
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-navy text-xs font-bold text-white">
-              {guest ? 'G' : initials(userName ?? 'U')}
+              {initials(userName)}
             </span>
-            {!guest ? (
-              <button
-                type="button"
-                onClick={() => {
-                  logout();
-                  router.replace('/login');
-                }}
-                className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-ink hover:bg-background"
-              >
-                Log out
-              </button>
-            ) : null}
+            <button
+              type="button"
+              onClick={() => {
+                logout();
+                router.replace('/login');
+              }}
+              className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-ink hover:bg-background"
+            >
+              Log out
+            </button>
           </div>
         ) : null}
       </div>

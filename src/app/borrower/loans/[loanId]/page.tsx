@@ -15,7 +15,7 @@ import {
   loanDueDate,
 } from '@/lib/loan-due';
 import { loanRef } from '@/lib/loan-ref';
-import { formatPaise } from '@/lib/money';
+import { formatPaise, repaymentProgressPct } from '@/lib/money';
 import { ApiError } from '@/types/api';
 import type { LoanDto } from '@/types/loan';
 
@@ -61,10 +61,12 @@ export default function LoanDetailPage() {
 
   const due = loanDueDate(loan);
   const showRepayment = loan.status === 'DISBURSED' || loan.status === 'CLOSED';
-  const paidPct =
-    loan.totalRepaymentPaise > 0
-      ? Math.min(100, Math.round((loan.totalPaidPaise / loan.totalRepaymentPaise) * 100))
-      : 0;
+  const paidPct = repaymentProgressPct(
+    loan.totalPaidPaise,
+    loan.totalRepaymentPaise,
+    loan.outstandingPaise,
+    0,
+  );
 
   return (
     <div className="space-y-4">
@@ -122,8 +124,10 @@ export default function LoanDetailPage() {
           <dl className="space-y-2.5 text-sm">
             <Row
               label="Applicant"
-              value={`${user?.fullName ?? '—'}${user?.pan ? ` · ${user.pan}` : ''}`}
+              value={`${user?.fullName ?? '—'} · ${loanRef(loan.id)}`}
             />
+            <Row label="Loan ID" value={loan.id} />
+            {user?.pan ? <Row label="PAN" value={user.pan} /> : null}
             <Row label="Principal" value={formatPaise(loan.principalPaise)} />
             <Row
               label="Interest rate"

@@ -15,7 +15,7 @@ import {
   loanDueDate,
 } from '@/lib/loan-due';
 import { loanRef } from '@/lib/loan-ref';
-import { formatPaise } from '@/lib/money';
+import { formatPaise, repaymentProgressPct } from '@/lib/money';
 import type { LoanDto, SalarySlipDto } from '@/types/loan';
 
 /**
@@ -75,13 +75,12 @@ export default function BorrowerHomePage() {
 
   const primary = loans[0]!;
   const due = loanDueDate(primary);
-  const paidPct =
-    primary.totalRepaymentPaise > 0
-      ? Math.min(
-          100,
-          Math.round((primary.totalPaidPaise / primary.totalRepaymentPaise) * 100),
-        )
-      : 0;
+  const paidPct = repaymentProgressPct(
+    primary.totalPaidPaise,
+    primary.totalRepaymentPaise,
+    primary.outstandingPaise,
+    0,
+  );
   const showRepayment =
     primary.status === 'DISBURSED' || primary.status === 'CLOSED';
 

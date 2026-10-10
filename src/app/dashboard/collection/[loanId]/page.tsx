@@ -8,7 +8,7 @@ import { StatusBadge } from '@/components/ops/status-badge';
 import { Field, PrimaryButton, TextInput } from '@/components/ui/field';
 import { Panel } from '@/components/ui/panel';
 import { loanRef } from '@/lib/loan-ref';
-import { formatPaise, rupeesToPaise } from '@/lib/money';
+import { formatPaise, repaymentProgressPct, rupeesToPaise } from '@/lib/money';
 import {
   getCollectionLoan,
   recordPayment,
@@ -86,10 +86,11 @@ export default function CollectionDetailPage() {
   }
 
   const canPay = loan.status === 'DISBURSED' && loan.outstandingPaise > 0;
-  const pct =
-    loan.totalRepaymentPaise > 0
-      ? Math.min(100, (loan.totalPaidPaise / loan.totalRepaymentPaise) * 100)
-      : 0;
+  const pct = repaymentProgressPct(
+    loan.totalPaidPaise,
+    loan.totalRepaymentPaise,
+    loan.outstandingPaise,
+  );
 
   return (
     <section className="space-y-4">
@@ -146,12 +147,12 @@ export default function CollectionDetailPage() {
             <Field label="UTR number" hint="Must be unique across all payments" className="sm:col-span-3">
               <TextInput required value={utr} onChange={(e) => setUtr(e.target.value)} />
             </Field>
-            <Field label="Amount" hint="Cannot exceed the outstanding balance">
+            <Field label="Amount">
               <TextInput
                 type="number"
                 required
-                min={1}
-                step={1}
+                min={0.01}
+                step={0.01}
                 value={amountRupees}
                 onChange={(e) => setAmountRupees(e.target.value)}
               />

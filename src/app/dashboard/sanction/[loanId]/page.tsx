@@ -10,6 +10,7 @@ import {
   approveLoan,
   downloadSalarySlip,
   getSanctionLoan,
+  openSalarySlipPreview,
   rejectLoan,
 } from '@/lib/ops-api';
 import { ApiError } from '@/types/api';
@@ -132,6 +133,17 @@ export default function SanctionDetailPage() {
             <button
               type="button"
               className="font-medium text-accent hover:underline"
+              onClick={() => {
+                void openSalarySlipPreview(slip.id).catch((err: unknown) => {
+                  setError(err instanceof ApiError ? err.message : 'Could not open salary slip');
+                });
+              }}
+            >
+              View payslip
+            </button>
+            <button
+              type="button"
+              className="font-medium text-muted hover:underline"
               onClick={() => {
                 void downloadSalarySlip(slip.id, slip.originalName).catch((err: unknown) => {
                   setError(err instanceof ApiError ? err.message : 'Download failed');

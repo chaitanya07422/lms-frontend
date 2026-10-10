@@ -65,10 +65,15 @@ export type PaymentDto = {
   createdAt: string;
 };
 
-export function listLeads(page = 1, limit = 20): Promise<{
-  items: LeadSummary[];
-}> {
-  return apiRequest(`/ops/sales/leads?page=${page}&limit=${limit}`);
+export function listLeads(opts?: {
+  cursor?: string;
+  limit?: number;
+}): Promise<CursorPage<LeadSummary>> {
+  const params = new URLSearchParams();
+  if (opts?.cursor) params.set('cursor', opts.cursor);
+  if (opts?.limit != null) params.set('limit', String(opts.limit));
+  const qs = params.toString();
+  return apiRequest(`/ops/sales/leads${qs ? `?${qs}` : ''}`);
 }
 
 export async function getLead(userId: string): Promise<PublicUser> {
@@ -76,9 +81,21 @@ export async function getLead(userId: string): Promise<PublicUser> {
   return data.user;
 }
 
-export async function listSanctionQueue(): Promise<QueueLoan[]> {
-  const data = await apiRequest<{ items: QueueLoan[] }>('/ops/sanction/loans');
-  return data.items;
+export type CursorPage<T> = {
+  items: T[];
+  nextCursor: string | null;
+  hasMore: boolean;
+};
+
+export function listSanctionQueue(opts?: {
+  cursor?: string;
+  limit?: number;
+}): Promise<CursorPage<QueueLoan>> {
+  const params = new URLSearchParams();
+  if (opts?.cursor) params.set('cursor', opts.cursor);
+  if (opts?.limit != null) params.set('limit', String(opts.limit));
+  const qs = params.toString();
+  return apiRequest(`/ops/sanction/loans${qs ? `?${qs}` : ''}`);
 }
 
 export function getSanctionLoan(loanId: string): Promise<{
@@ -105,9 +122,15 @@ export async function rejectLoan(loanId: string, reason: string): Promise<LoanDt
   return data.loan;
 }
 
-export async function listDisbursementQueue(): Promise<QueueLoan[]> {
-  const data = await apiRequest<{ items: QueueLoan[] }>('/ops/disbursement/loans');
-  return data.items;
+export function listDisbursementQueue(opts?: {
+  cursor?: string;
+  limit?: number;
+}): Promise<CursorPage<QueueLoan>> {
+  const params = new URLSearchParams();
+  if (opts?.cursor) params.set('cursor', opts.cursor);
+  if (opts?.limit != null) params.set('limit', String(opts.limit));
+  const qs = params.toString();
+  return apiRequest(`/ops/disbursement/loans${qs ? `?${qs}` : ''}`);
 }
 
 export async function getDisbursementLoan(loanId: string): Promise<LoanDto> {
@@ -123,9 +146,15 @@ export async function disburseLoan(loanId: string): Promise<LoanDto> {
   return data.loan;
 }
 
-export async function listCollectionQueue(): Promise<QueueLoan[]> {
-  const data = await apiRequest<{ items: QueueLoan[] }>('/ops/collection/loans');
-  return data.items;
+export function listCollectionQueue(opts?: {
+  cursor?: string;
+  limit?: number;
+}): Promise<CursorPage<QueueLoan>> {
+  const params = new URLSearchParams();
+  if (opts?.cursor) params.set('cursor', opts.cursor);
+  if (opts?.limit != null) params.set('limit', String(opts.limit));
+  const qs = params.toString();
+  return apiRequest(`/ops/collection/loans${qs ? `?${qs}` : ''}`);
 }
 
 export function getCollectionLoan(loanId: string): Promise<{
@@ -158,22 +187,39 @@ export async function createUserByAdmin(body: {
   return data.user;
 }
 
-/** Binary download — not JSON envelope. */
-export async function downloadSalarySlip(id: string, filename: string): Promise<void> {
+async function fetchSalarySlipBlob(id: string, inline: boolean): Promise<Blob> {
   const token = localStorage.getItem(AUTH_TOKEN_KEY);
-  const response = await fetch(`${API_BASE_URL}/salary-slips/${id}/download`, {
+  const qs = inline ? '?inline=1' : '';
+  const response = await fetch(`${API_BASE_URL}/salary-slips/${id}/download${qs}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 
   if (!response.ok) {
-    throw new ApiError(response.status, 'DOWNLOAD_FAILED', 'Could not download salary slip');
+    throw new ApiError(response.status, 'DOWNLOAD_FAILED', 'Could not open salary slip');
   }
 
-  const blob = await response.blob();
+  return response.blob();
+}
+
+/** Binary download — not JSON envelope. */
+export async function downloadSalarySlip(id: string, filename: string): Promise<void> {
+  const blob = await fetchSalarySlipBlob(id, false);
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;
   anchor.download = filename;
   anchor.click();
   URL.revokeObjectURL(url);
+}
+
+/** Open PDF/JPG/PNG in a new browser tab (no download prompt). */
+export async function openSalarySlipPreview(id: string): Promise<void> {
+  const blob = await fetchSalarySlipBlob(id, true);
+  const url = URL.createObjectURL(blob);
+  const opened = window.open(url, '_blank', 'noopener,noreferrer');
+  if (!opened) {
+    URL.revokeObjectURL(url);
+    throw new ApiError(0, 'POPUP_BLOCKED', 'Allow pop-ups to view the salary slip');
+  }
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }

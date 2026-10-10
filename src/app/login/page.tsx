@@ -94,9 +94,6 @@ export default function LoginPage() {
                 {loginBusy ? 'Logging in…' : 'Log in'}
               </PrimaryButton>
             </form>
-            <div className="mt-6 rounded-xl bg-background px-4 py-3 text-sm text-muted">
-              Staff log in here too. Executives land on their own desk after logging in.
-            </div>
             <p className="mt-5 text-center text-sm text-muted">
               New borrower?{' '}
               <button

@@ -14,7 +14,7 @@ import {
   updateProfile,
   uploadSalarySlip,
 } from '@/lib/borrower-api';
-import { breFromApiError, toDateInputValue } from '@/lib/bre-errors';
+import { breFieldError, breFromApiError, toDateInputValue } from '@/lib/bre-errors';
 import {
   EMPLOYMENT_MODES,
   MIN_MONTHLY_SALARY_RUPEES,
@@ -44,7 +44,7 @@ function BorrowerProfileForm() {
   const [fullName, setFullName] = useState('');
   const [pan, setPan] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
-  const [salaryRupees, setSalaryRupees] = useState<number | ''>(MIN_MONTHLY_SALARY_RUPEES);
+  const [salaryRupees, setSalaryRupees] = useState<number | ''>('');
   const [employmentMode, setEmploymentMode] = useState<EmploymentMode>('Salaried');
   const [bre, setBre] = useState<BreResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -234,26 +234,41 @@ function BorrowerProfileForm() {
               onChange={(e) => setFullName(e.target.value)}
             />
           </Field>
-          <Field label="PAN" hint="5 letters, 4 digits, 1 letter">
+          <Field label="PAN" error={breFieldError(bre, 'BRE-PAN')}>
             <TextInput
               required
               disabled={locked}
               value={pan}
-              onChange={(e) => setPan(e.target.value.toUpperCase())}
+              onChange={(e) => {
+                setPan(e.target.value.toUpperCase());
+                if (bre && !bre.passed) setBre(null);
+              }}
               placeholder="ABCDE1234F"
-              className="uppercase"
+              className={`uppercase${breFieldError(bre, 'BRE-PAN') ? ' border-danger' : ''}`}
             />
           </Field>
-          <Field label="Date of Birth" hint="Age must be 23 to 50">
+          <Field
+            label="Date of Birth"
+            hint="Age must be 23 to 50"
+            error={breFieldError(bre, 'BRE-AGE')}
+          >
             <TextInput
               type="date"
               required
               disabled={locked}
               value={dateOfBirth}
-              onChange={(e) => setDateOfBirth(e.target.value)}
+              onChange={(e) => {
+                setDateOfBirth(e.target.value);
+                if (bre && !bre.passed) setBre(null);
+              }}
+              className={breFieldError(bre, 'BRE-AGE') ? 'border-danger' : undefined}
             />
           </Field>
-          <Field label="Monthly Salary" hint="Minimum ₹25,000">
+          <Field
+            label="Monthly Salary"
+            hint="Minimum ₹25,000"
+            error={breFieldError(bre, 'BRE-SALARY')}
+          >
             <TextInput
               type="number"
               required
@@ -264,7 +279,9 @@ function BorrowerProfileForm() {
               onChange={(e) => {
                 const raw = e.target.value;
                 setSalaryRupees(raw === '' ? '' : Number(raw));
+                if (bre && !bre.passed) setBre(null);
               }}
+              className={breFieldError(bre, 'BRE-SALARY') ? 'border-danger' : undefined}
             />
           </Field>
         </div>
@@ -274,16 +291,22 @@ function BorrowerProfileForm() {
           <div className="grid gap-2 sm:grid-cols-3">
             {EMPLOYMENT_MODES.map((mode) => {
               const selected = employmentMode === mode;
+              const employmentError = Boolean(breFieldError(bre, 'BRE-EMPLOYMENT'));
               return (
                 <button
                   key={mode}
                   type="button"
                   disabled={locked}
-                  onClick={() => setEmploymentMode(mode)}
+                  onClick={() => {
+                    setEmploymentMode(mode);
+                    if (bre && !bre.passed) setBre(null);
+                  }}
                   className={`flex items-center gap-2 rounded-lg border px-3 py-3 text-left text-sm font-medium disabled:cursor-default disabled:opacity-90 ${
                     selected
                       ? 'border-teal bg-teal-soft text-teal'
-                      : 'border-border bg-card text-ink hover:bg-background disabled:hover:bg-card'
+                      : employmentError
+                        ? 'border-danger bg-card text-ink'
+                        : 'border-border bg-card text-ink hover:bg-background disabled:hover:bg-card'
                   }`}
                 >
                   <span
@@ -298,9 +321,14 @@ function BorrowerProfileForm() {
               );
             })}
           </div>
+          {breFieldError(bre, 'BRE-EMPLOYMENT') ? (
+            <p className="mt-1.5 text-xs text-danger">
+              {breFieldError(bre, 'BRE-EMPLOYMENT')}
+            </p>
+          ) : null}
         </div>
 
-        {bre ? <BreResultPanel bre={bre} /> : null}
+        {bre?.passed ? <BreResultPanel bre={bre} /> : null}
         {error ? <p className="text-sm text-danger">{error}</p> : null}
 
         {locked ? (

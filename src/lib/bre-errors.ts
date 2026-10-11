@@ -33,3 +33,12 @@ export function toDateInputValue(isoOrDate: string | undefined): string {
   }
   return isoOrDate.slice(0, 10);
 }
+
+/** Message for a single BRE rule, if present. */
+export function breFieldError(
+  bre: BreResult | null | undefined,
+  rule: string,
+): string | undefined {
+  if (!bre || bre.passed) return undefined;
+  return bre.failures.find((f) => f.rule === rule)?.message;
+}

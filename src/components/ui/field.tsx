@@ -9,11 +9,13 @@ import type {
 export function Field({
   label,
   hint,
+  error,
   children,
   className = '',
 }: {
   label: string;
   hint?: string;
+  error?: string;
   children: ReactNode;
   className?: string;
 }) {
@@ -21,7 +23,11 @@ export function Field({
     <label className={`block text-sm ${className}`}>
       {label ? <span className="mb-1.5 block font-medium text-ink">{label}</span> : null}
       {children}
-      {hint ? <span className="mt-1 block text-xs text-muted">{hint}</span> : null}
+      {error ? (
+        <span className="mt-1 block text-xs text-danger">{error}</span>
+      ) : hint ? (
+        <span className="mt-1 block text-xs text-muted">{hint}</span>
+      ) : null}
     </label>
   );
 }

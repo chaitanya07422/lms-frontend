@@ -158,8 +158,6 @@ APPLIED → SANCTIONED → DISBURSED → CLOSED
 
 ## Suggested evaluator walkthrough
 
-Matches the assignment demo video flow (3–5 min):
-
 1. **Borrower** — register or use `borrower@creditsea.local`  
 2. Enter details that **fail BRE** → see clear errors  
 3. Fix details so BRE **passes** → upload salary slip → configure loan → Apply  

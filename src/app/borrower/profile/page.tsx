@@ -21,6 +21,7 @@ import {
   type EmploymentMode,
 } from '@/lib/loan-limits';
 import { paiseToRupees, rupeesToPaise } from '@/lib/money';
+import { FULL_NAME_HINT, lettersOnlyName } from '@/lib/name';
 import {
   MAX_SALARY_SLIP_BYTES,
   validateSalarySlipFile,
@@ -226,12 +227,14 @@ function BorrowerProfileForm() {
 
       <form className="space-y-5" onSubmit={onSubmit}>
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Full Name">
+          <Field label="Full Name" hint={locked ? undefined : FULL_NAME_HINT}>
             <TextInput
               required
               disabled={locked}
               value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              onChange={(e) => setFullName(lettersOnlyName(e.target.value))}
+              pattern="[A-Za-z]+( [A-Za-z]+)*"
+              title={FULL_NAME_HINT}
             />
           </Field>
           <Field label="PAN" error={breFieldError(bre, 'BRE-PAN')}>

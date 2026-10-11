@@ -8,6 +8,7 @@ import { Field, TextInput, PrimaryButton } from '@/components/ui/field';
 import { Panel } from '@/components/ui/panel';
 import { useAuth } from '@/context/auth-context';
 import { APP_NAME, APP_TAGLINE } from '@/lib/config';
+import { FULL_NAME_HINT, lettersOnlyName, nameMeetsRules } from '@/lib/name';
 import { PASSWORD_RULES_HINT, passwordMeetsRules } from '@/lib/password';
 import { homePathForRole } from '@/lib/roles';
 import { ApiError } from '@/types/api';
@@ -37,6 +38,10 @@ export default function LoginPage() {
   async function onRegister(event: FormEvent) {
     event.preventDefault();
     setRegError(null);
+    if (!nameMeetsRules(regName)) {
+      setRegError(FULL_NAME_HINT);
+      return;
+    }
     if (!passwordMeetsRules(regPassword)) {
       setRegError(PASSWORD_RULES_HINT);
       return;
@@ -120,13 +125,15 @@ export default function LoginPage() {
               Create an account to apply for a personal loan.
             </p>
             <form className="mt-7 space-y-4" onSubmit={onRegister}>
-              <Field label="Full name">
+              <Field label="Full name" hint={FULL_NAME_HINT}>
                 <TextInput
                   required
                   placeholder="e.g. Rahul Sharma"
                   value={regName}
-                  onChange={(e) => setRegName(e.target.value)}
+                  onChange={(e) => setRegName(lettersOnlyName(e.target.value))}
                   autoComplete="name"
+                  pattern="[A-Za-z]+( [A-Za-z]+)*"
+                  title={FULL_NAME_HINT}
                 />
               </Field>
               <Field label="Email">

@@ -5,6 +5,7 @@ import { FormEvent, useState } from 'react';
 import { Field, PrimaryButton, TextInput } from '@/components/ui/field';
 import { Panel } from '@/components/ui/panel';
 import { createUserByAdmin } from '@/lib/ops-api';
+import { FULL_NAME_HINT, lettersOnlyName, nameMeetsRules } from '@/lib/name';
 import { PASSWORD_RULES_HINT, passwordMeetsRules } from '@/lib/password';
 import { ApiError } from '@/types/api';
 import type { OpsRole } from '@/types/user';
@@ -66,6 +67,10 @@ export default function AdminCreateUserPage() {
     event.preventDefault();
     setError(null);
     setSuccess(null);
+    if (!nameMeetsRules(fullName)) {
+      setError(FULL_NAME_HINT);
+      return;
+    }
     if (!passwordMeetsRules(password)) {
       setError(PASSWORD_RULES_HINT);
       return;
@@ -117,13 +122,15 @@ export default function AdminCreateUserPage() {
 
         <form onSubmit={onSubmit} className="mt-6 space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Full name">
+            <Field label="Full name" hint={FULL_NAME_HINT}>
               <TextInput
                 required
                 minLength={2}
                 placeholder="Priya Sharma"
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                onChange={(e) => setFullName(lettersOnlyName(e.target.value))}
+                pattern="[A-Za-z]+( [A-Za-z]+)*"
+                title={FULL_NAME_HINT}
               />
             </Field>
             <Field label="Email">

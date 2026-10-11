@@ -12,6 +12,7 @@ import {
 
 import { fetchMe, login as loginRequest, register as registerRequest } from '@/lib/auth-api';
 import { AUTH_TOKEN_KEY } from '@/lib/config';
+import { identifyUser, resetPostHog } from '@/lib/posthog';
 import type { PublicUser } from '@/types/user';
 
 type AuthContextValue = {
@@ -35,12 +36,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(AUTH_TOKEN_KEY, nextToken);
     setToken(nextToken);
     setUser(nextUser);
+    identifyUser(nextUser);
   }, []);
 
   const logout = useCallback(() => {
     localStorage.removeItem(AUTH_TOKEN_KEY);
     setToken(null);
     setUser(null);
+    resetPostHog();
   }, []);
 
   const refreshUser = useCallback(async () => {
@@ -53,6 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const me = await fetchMe(stored);
     setToken(stored);
     setUser(me);
+    identifyUser(me);
   }, []);
 
   useEffect(() => {
@@ -68,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!cancelled) {
           setToken(stored);
           setUser(me);
+          identifyUser(me);
         }
       } catch {
         if (!cancelled) {

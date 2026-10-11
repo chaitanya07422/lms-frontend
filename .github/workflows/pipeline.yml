@@ -33,6 +33,10 @@ jobs:
           # Baked into the client bundle — browser calls Oracle API.
           NEXT_PUBLIC_API_BASE_URL: https://creditsea.duckdns.org/api/v1
           NEXT_PUBLIC_APP_NAME: CreditSea
+          # PostHog analytics.
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
+          NEXT_PUBLIC_POSTHOG_HOST: ${{ secrets.NEXT_PUBLIC_POSTHOG_HOST }}
+          NEXT_PUBLIC_POSTHOG_UI_HOST: ${{ secrets.NEXT_PUBLIC_POSTHOG_UI_HOST }}
 
       - name: Pack standalone release
         run: |

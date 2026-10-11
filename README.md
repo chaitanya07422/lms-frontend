@@ -77,8 +77,13 @@ Edit `.env.local` before starting. See [`.env.example`](./.env.example).
 |----------|---------|---------------|
 | `NEXT_PUBLIC_API_BASE_URL` | Backend base including `/api/v1` | `http://localhost:4000/api/v1` |
 | `NEXT_PUBLIC_APP_NAME` | Product label in UI | `CreditSea` |
+| `NEXT_PUBLIC_POSTHOG_KEY` | Optional PostHog project API key | unset = analytics off |
+| `NEXT_PUBLIC_POSTHOG_HOST` | PostHog ingest host (or `/ingest` proxy) | `/ingest` |
+| `NEXT_PUBLIC_POSTHOG_UI_HOST` | PostHog app UI host | `https://us.posthog.com` |
 
 Backend `CORS_ORIGIN` must include `http://localhost:3000`.
+
+**PostHog:** set `NEXT_PUBLIC_POSTHOG_KEY` from your PostHog project settings. Events go through the Next.js `/ingest` rewrite (less likely blocked). Users are identified on login/register and reset on logout.
 
 ### Scripts
 

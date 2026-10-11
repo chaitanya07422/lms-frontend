@@ -101,12 +101,12 @@ Password123!
 
 | Role | Email | UI access |
 |------|-------|-----------|
-| Admin | `admin@lms.local` | All dashboard modules |
-| Sales | `sales@lms.local` | Sales only |
-| Sanction | `sanction@lms.local` | Sanction only |
-| Disbursement | `disbursement@lms.local` | Disbursement only |
-| Collection | `collection@lms.local` | Collection only |
-| Borrower | `borrower@lms.local` | Borrower portal only |
+| Admin | `admin@creditsea.local` | All dashboard modules |
+| Sales | `sales@creditsea.local` | Sales only |
+| Sanction | `sanction@creditsea.local` | Sanction only |
+| Disbursement | `disbursement@creditsea.local` | Disbursement only |
+| Collection | `collection@creditsea.local` | Collection only |
+| Borrower | `borrower@creditsea.local` | Borrower portal only |
 
 For local setup, run `npm run seed` once in **lms-backend**. New borrowers can also **Sign up** from the login page.
 
@@ -155,12 +155,12 @@ APPLIED → SANCTIONED → DISBURSED → CLOSED
 
 Matches the assignment demo video flow (3–5 min):
 
-1. **Borrower** — register or use `borrower@lms.local`  
+1. **Borrower** — register or use `borrower@creditsea.local`  
 2. Enter details that **fail BRE** → see clear errors  
 3. Fix details so BRE **passes** → upload salary slip → configure loan → Apply  
-4. **Sanction** (`sanction@lms.local`) — approve the loan  
-5. **Disbursement** (`disbursement@lms.local`) — mark disbursed  
-6. **Collection** (`collection@lms.local`) — record payment(s) with unique UTR until outstanding is ₹0 → status **CLOSED**  
+4. **Sanction** (`sanction@creditsea.local`) — approve the loan  
+5. **Disbursement** (`disbursement@creditsea.local`) — mark disbursed  
+6. **Collection** (`collection@creditsea.local`) — record payment(s) with unique UTR until outstanding is ₹0 → status **CLOSED**  
 7. Optionally show **Sales** leads and that a **sales** user cannot open Sanction routes  
 
 ---

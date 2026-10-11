@@ -7,7 +7,7 @@ import { GuestShell } from '@/components/auth/guest-shell';
 import { Field, TextInput, PrimaryButton } from '@/components/ui/field';
 import { Panel } from '@/components/ui/panel';
 import { useAuth } from '@/context/auth-context';
-import { APP_NAME } from '@/lib/config';
+import { APP_NAME, APP_TAGLINE } from '@/lib/config';
 import { PASSWORD_RULES_HINT, passwordMeetsRules } from '@/lib/password';
 import { homePathForRole } from '@/lib/roles';
 import { ApiError } from '@/types/api';
@@ -71,8 +71,8 @@ export default function LoginPage() {
       <div className="mx-auto w-full max-w-md">
         {mode === 'login' ? (
           <Panel className="shadow-sm">
-            <h1 className="text-2xl font-bold text-ink">Log in</h1>
-            <p className="mt-1 text-sm text-muted">Welcome back. Continue where you left off.</p>
+            <h1 className="text-2xl font-bold text-ink">Log in to {APP_NAME}</h1>
+            <p className="mt-1 text-sm text-muted">{APP_TAGLINE}</p>
             <form className="mt-7 space-y-4" onSubmit={onLogin}>
               <Field label="Email">
                 <TextInput
@@ -115,9 +115,9 @@ export default function LoginPage() {
           </Panel>
         ) : (
           <Panel className="shadow-sm">
-            <h1 className="text-2xl font-bold text-ink">Create your account</h1>
+            <h1 className="text-2xl font-bold text-ink">Join {APP_NAME}</h1>
             <p className="mt-1 text-sm text-muted">
-              New to {APP_NAME}? Sign up to start your loan application.
+              Create an account to apply for a personal loan.
             </p>
             <form className="mt-7 space-y-4" onSubmit={onRegister}>
               <Field label="Full name">

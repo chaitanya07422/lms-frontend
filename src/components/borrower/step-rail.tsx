@@ -17,7 +17,7 @@ const STATE_LABEL: Record<StepState, string> = {
   upcoming: 'Upcoming',
 };
 
-/** Horizontal stepper matching LoanDesk PDF (line above each step). */
+/** Horizontal application stepper. */
 export function ProgressStepper({ steps }: { steps: WizardStep[] }) {
   return (
     <nav className="w-full px-4 pt-6 pb-2 sm:px-6 lg:px-8">

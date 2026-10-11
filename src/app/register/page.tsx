@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-/** Register is on the combined auth page (LoanDesk PDF). */
+/** Register is on the combined auth page. */
 export default function RegisterRedirectPage() {
   const router = useRouter();
   useEffect(() => {

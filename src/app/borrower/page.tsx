@@ -277,9 +277,14 @@ function Row({
   strong?: boolean;
 }) {
   return (
-    <div className="flex justify-between gap-3">
-      <dt className="text-muted">{label}</dt>
-      <dd className={`text-right ${strong ? 'font-bold text-ink' : 'font-medium text-ink'}`}>
+    <div className="flex items-start justify-between gap-3">
+      <dt className="shrink-0 text-muted">{label}</dt>
+      <dd
+        title={value}
+        className={`min-w-0 flex-1 truncate text-right ${
+          strong ? 'font-bold text-ink' : 'font-medium text-ink'
+        }`}
+      >
         {value}
       </dd>
     </div>

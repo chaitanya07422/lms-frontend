@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 
 import { Providers } from '@/components/providers';
-import { APP_NAME } from '@/lib/config';
+import { APP_NAME, APP_TAGLINE } from '@/lib/config';
 
 import './globals.css';
 
@@ -17,8 +17,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: APP_NAME,
-  description: 'Loan Management System — borrower portal and operations dashboard',
+  title: {
+    default: APP_NAME,
+    template: `%s · ${APP_NAME}`,
+  },
+  description: `${APP_NAME} — ${APP_TAGLINE}. Apply online; teams manage sanction, disbursement, and collection.`,
 };
 
 export default function RootLayout({

@@ -10,11 +10,11 @@ import { useAuth } from '@/context/auth-context';
 import { modulesForRole } from '@/lib/roles';
 
 const DESK: Record<string, string> = {
-  admin: 'Admin Console',
-  sales: 'Sales Desk',
-  sanction: 'Sanction Desk',
-  disbursement: 'Disbursement Desk',
-  collection: 'Collection Desk',
+  admin: 'Admin',
+  sales: 'Sales',
+  sanction: 'Sanction',
+  disbursement: 'Disbursement',
+  collection: 'Collections',
 };
 
 const LABELS: Record<string, string> = {

@@ -23,32 +23,32 @@ const ROLE_META: Record<
 > = {
   admin: {
     title: 'Admin',
-    blurb: 'Full console — overview, all desks, and user creation.',
-    desk: 'Admin Console',
+    blurb: 'Full console — overview, all modules, and user creation.',
+    desk: 'CreditSea Admin',
     accent: 'border-navy bg-[#eef2ff] text-navy',
   },
   sales: {
     title: 'Sales',
     blurb: 'View borrower leads and application progress.',
-    desk: 'Sales Desk',
+    desk: 'CreditSea Sales',
     accent: 'border-violet-300 bg-violet-50 text-violet-900',
   },
   sanction: {
     title: 'Sanction',
     blurb: 'Approve or reject applied loans.',
-    desk: 'Sanction Desk',
+    desk: 'CreditSea Sanction',
     accent: 'border-sky-300 bg-sky-50 text-sky-900',
   },
   disbursement: {
     title: 'Disbursement',
     blurb: 'Mark sanctioned loans as disbursed.',
-    desk: 'Disbursement Desk',
+    desk: 'CreditSea Disbursement',
     accent: 'border-teal/40 bg-teal-soft text-teal',
   },
   collection: {
     title: 'Collection',
     blurb: 'Record UTR payments and close repaid loans.',
-    desk: 'Collection Desk',
+    desk: 'CreditSea Collections',
     accent: 'border-orange-300 bg-orange-50 text-orange-900',
   },
 };
